@@ -4,224 +4,217 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
     <title>Admin Dashboard</title>
-    <link href="./dist/output.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="./node_modules/flowbite/dist/flowbite.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
     <style>
-            /* Custom scrollbar for sidebar */
-            ::-webkit-scrollbar {
-                width: 6px;
-            }
-            ::-webkit-scrollbar-thumb {
-                background-color: rgba(255, 255, 255, 0.3);
-                border-radius: 3px;
-            }
-            /* Icon container styling */
+        /* Custom scrollbar for sidebar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        /* Icon container styling */
+        .icon-container {
+            border: 2px solid #3b82f6;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            width: 4.75rem;
+            height: 4.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e0f2fe;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 3px 8px rgba(59, 130, 246, 0.35);
+        }
+        .icon-container:hover, .icon-container:focus {
+            background-color: #bae6fd;
+            border-color: #2563eb;
+            outline: none;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.7);
+        }
+        .icon-container i {
+            color: #1e40af;
+            font-size: 2.25rem;
+            transition: color 0.3s ease;
+        }
+        .icon-label {
+            font-size: 0.8rem;
+            color: #475569;
+            text-align: center;
+            line-height: 1.2rem;
+            user-select: none;
+            min-height: 1.3rem;
+            font-weight: 600;
+        }
+        .icon-value {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1e293b;
+            user-select: none;
+            min-height: 1.3rem;
+        }
+        @media (max-width: 640px) {
             .icon-container {
-                border: 2px solid #3b82f6;
-                border-radius: 0.75rem;
-                padding: 0.75rem;
-                width: 4.75rem;
-                height: 4.75rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background-color: #e0f2fe;
-                transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-                box-shadow: 0 3px 8px rgba(59, 130, 246, 0.35);
-            }
-            .icon-container:hover, .icon-container:focus {
-                background-color: #bae6fd;
-                border-color: #2563eb;
-                outline: none;
-                cursor: pointer;
-                box-shadow: 0 6px 16px rgba(37, 99, 235, 0.7);
+                width: 3.75rem;
+                height: 3.75rem;
+                padding: 0.5rem;
+                box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
             }
             .icon-container i {
-                color: #1e40af;
-                font-size: 2.25rem;
-                transition: color 0.3s ease;
+                font-size: 1.75rem;
             }
             .icon-label {
-                font-size: 0.8rem;
-                color: #475569;
-                text-align: center;
-                line-height: 1.2rem;
-                user-select: none;
-                min-height: 1.3rem;
-                font-weight: 600;
+                font-size: 0.7rem;
+                min-height: 1rem;
             }
             .icon-value {
-                font-weight: 700;
-                font-size: 1rem;
-                color: #1e293b;
-                user-select: none;
-                min-height: 1.3rem;
+                font-size: 0.85rem;
+                min-height: 1rem;
             }
-            @media (max-width: 640px) {
-                .icon-container {
-                    width: 3.75rem;
-                    height: 3.75rem;
-                    padding: 0.5rem;
-                    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
-                }
-                .icon-container i {
-                    font-size: 1.75rem;
-                }
-                .icon-label {
-                    font-size: 0.7rem;
-                    min-height: 1rem;
-                }
-                .icon-value {
-                    font-size: 0.85rem;
-                    min-height: 1rem;
-                }
-                main {
-                    padding: 1rem;
-                }
-            }
-            .line-path { stroke: #00008b; stroke-width: 3; fill: none; }
-            .data-point { fill: #00008b; stroke: white; stroke-width: 2; }
-            .data-point:hover, .data-point:focus { fill: #000066; r: 8; }
-            .area-fill { fill: #e6e6ff; fill-opacity: 0.5; }
-            .axis { stroke: #475569; stroke-width: 1; }
-            .grid { stroke: #94a3b8; stroke-width: 0.5; stroke-dasharray: 4 4; }
-            .label { font-family: Arial, sans-serif; font-size: 16px; fill: #1e293b; }
-            .highlight { filter: drop-shadow(0 0 8px rgba(0,0,90,0.25)); }
-            .line-path:hover, .line-path:focus {
-                fill: #00008b !important;
-                outline: none;
-                filter: drop-shadow(0 0 6px rgba(0, 0, 139, 0.6));
-            }
-
-            /* Sidebar styles */
-            .sidebar {
-                transition: all 0.3s ease;
-                position: fixed;
-                top: 0;
-                left: 0;
-                bottom: 0;
-                z-index: 40;
-                overflow-y: auto;
-                height: 100vh;
-                width: 256px;
-                min-width: 256px;
-                max-width: 256px;
-            }
-
-            .sidebar:hover {
-                width: 256px !important;
-                min-width: 256px !important;
-                max-width: 256px !important;
-            }
-
-            .sidebar:not(:hover) {
-                width: 80px !important;
-                min-width: 80px !important;
-                max-width: 80px !important;
-            }
-
-            .sidebar:not(:hover) .nav-text,
-            .sidebar:not(:hover) .welcome-text,
-            .sidebar:not(:hover) .footer-text {
-                display: none;
-            }
-
-            .sidebar:not(:hover) .nav-icon {
-                margin-right: 0;
-            }
-
-            .sidebar:not(:hover) .nav-item {
-                justify-content: center;
-                padding: 0.75rem;
-            }
-
-            .sidebar:not(:hover) .profile-section {
-                padding: 0.5rem;
-            }
-
-            .sidebar:not(:hover) .profile-image {
-                width: 40px;
-                height: 40px;
-            }
-
-            .sidebar:not(:hover) .footer-section {
-                padding: 0.5rem;
-            }
-
-            /* Add styles for main content to account for fixed sidebar */
             main {
-                margin-left: 256px;
-                transition: margin-left 0.3s ease;
-                min-height: 100vh;
-                width: calc(100% - 256px);
+                padding: 1rem;
             }
+        }
+        .line-path { stroke: #00008b; stroke-width: 3; fill: none; }
+        .data-point { fill: #00008b; stroke: white; stroke-width: 2; }
+        .data-point:hover, .data-point:focus { fill: #000066; r: 8; }
+        .area-fill { fill: #e6e6ff; fill-opacity: 0.5; }
+        .axis { stroke: #475569; stroke-width: 1; }
+        .grid { stroke: #94a3b8; stroke-width: 0.5; stroke-dasharray: 4 4; }
+        .label { font-family: Arial, sans-serif; font-size: 16px; fill: #1e293b; }
+        .highlight { filter: drop-shadow(0 0 8px rgba(0,0,90,0.25)); }
+        .line-path:hover, .line-path:focus {
+            fill: #00008b !important;
+            outline: none;
+            filter: drop-shadow(0 0 6px rgba(0, 0, 139, 0.6));
+        }
 
-            .sidebar:not(:hover) + main {
-                margin-left: 80px;
-                width: calc(100% - 80px);
-            }
+        /* Sidebar styles */
+        .sidebar {
+            transition: all 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 40;
+            overflow-y: auto;
+            height: 100vh;
+            width: 256px;
+            min-width: 256px;
+            max-width: 256px;
+        }
 
-            /* Fix icon positioning */
-            .nav-item {
-                display: flex;
-                align-items: center;
-                position: relative;
-            }
+        .sidebar:hover {
+            width: 256px !important;
+            min-width: 256px !important;
+            max-width: 256px !important;
+        }
 
-            .nav-icon {
-                position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 20px;
-                height: 20px;
-                transition: all 0.3s ease;
-            }
+        .sidebar:not(:hover) {
+            width: 80px !important;
+            min-width: 80px !important;
+            max-width: 80px !important;
+        }
 
-            .window-controls button.close:hover {
-                color: #ef4444;
-            }
+        .sidebar:not(:hover) .nav-text,
+        .sidebar:not(:hover) .welcome-text,
+        .sidebar:not(:hover) .footer-text {
+            display: none;
+        }
 
-            /* Toast Notification Styles */
-            .toast {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                padding: 16px 24px;
-                border-radius: 8px;
-                color: white;
-                font-weight: 500;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                transform: translateY(100px);
-                opacity: 0;
-                transition: all 0.3s ease;
-                z-index: 1000;
-            }
+        .sidebar:not(:hover) .nav-icon {
+            margin-right: 0;
+        }
 
-            .toast.show {
-                transform: translateY(0);
-                opacity: 1;
-            }
+        .sidebar:not(:hover) .nav-item {
+            justify-content: center;
+            padding: 0.75rem;
+        }
 
-            .toast.success {
-                background-color: #10B981;
-            }
+        .sidebar:not(:hover) .profile-section {
+            padding: 0.5rem;
+        }
 
-            .toast.error {
-                background-color: #EF4444;
-            }
+        .sidebar:not(:hover) .profile-image {
+            width: 40px;
+            height: 40px;
+        }
 
-            .toast.info {
-                background-color: #3B82F6;
-            }
+        .sidebar:not(:hover) .footer-section {
+            padding: 0.5rem;
+        }
 
-            .toast i {
-                font-size: 20px;
-            }
+        /* Add styles for main content to account for fixed sidebar */
+        main {
+            margin-left: 80px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar:hover + main {
+            margin-left: 256px;
+        }
+
+        /* Fix icon positioning */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .nav-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Toast Notification Styles */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background-color: #10B981;
+        }
+
+        .toast.error {
+            background-color: #EF4444;
+        }
+
+        .toast.info {
+            background-color: #3B82F6;
+        }
+
+        .toast i {
+            font-size: 20px;
+        }
     </style>
 </head>
 <body class="bg-white font-sans text-base text-gray-700 relative">
@@ -231,18 +224,18 @@
         <span id="toast-message"></span>
     </div>
 
-    <div class="fixed top-0 right-0 z-50 flex gap-2 select-none p-2">
-        <button onclick="window.electronAPI.minimize()" title="Minimize" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-blue-600 transition-colors duration-150">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 18"/></svg>
-        </button>
-        <button onclick="window.electronAPI.maximize()" title="Maximize/Restore" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-green-600 transition-colors duration-150">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" stroke-width="2"/></svg>
-        </button>
-        <button onclick="window.electronAPI.close()" title="Close" class="w-8 h-8 flex items-center justify-center rounded hover:bg-red-100 active:bg-red-200 text-gray-600 hover:text-red-600 transition-colors duration-150">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 6l12 12M6 18L18 6"/></svg>
-        </button>
-    </div>
     <div class="flex min-h-screen overflow-hidden">
+        <div class="fixed top-0 right-0 z-50 flex gap-2 select-none p-2">
+            <button onclick="window.electronAPI.minimize()" title="Minimize" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-blue-600 transition-colors duration-150">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 18"/></svg>
+            </button>
+            <button onclick="window.electronAPI.maximize()" title="Maximize/Restore" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-green-600 transition-colors duration-150">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" stroke-width="2"/></svg>
+            </button>
+            <button onclick="window.electronAPI.close()" title="Close" class="w-8 h-8 flex items-center justify-center rounded hover:bg-red-100 active:bg-red-200 text-gray-600 hover:text-red-600 transition-colors duration-150">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 6l12 12M6 18L18 6"/></svg>
+            </button>
+        </div>
         <!-- Sidebar -->
         <aside class="sidebar bg-gray-100 w-64 min-w-[256px] max-w-[256px] flex flex-col py-6 px-3 select-none shrink-0 shadow-xl z-10 border-r border-gray-200 relative">
             <div class="flex flex-col items-center space-y-3 mb-8 profile-section">
@@ -332,7 +325,7 @@
 
         <!-- Main content -->
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-secondary-50">
-            <div class="ml-64 container mx-auto px-4 py-6 max-w-7xl">
+            <div class="container mx-auto px-4 py-6 max-w-7xl">
                 <!-- Header Section -->
                 <header class="mb-6">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -344,7 +337,7 @@
                         </div>
                         
                         <div class="mt-4 md:mt-0">
-                            <button class="px-3 py-1.5 bg-primary-600 text-white rounded-lg shadow hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all flex items-center text-sm">
+                            <button class="px-3 py-1.5 bg-gray-600 text-white rounded-lg shadow hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all flex items-center text-sm">
                                 <i class="fas fa-sync-alt mr-2"></i>
                                 <span onclick="fetchDashboardData()">Refresh Data</span>
                             </button>

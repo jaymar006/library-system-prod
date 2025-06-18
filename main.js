@@ -458,18 +458,15 @@ ipcMain.handle('add-students', async (event, studentsData) => {
     });
 });
 
-// Add this IPC handler if not already present
-ipcMain.handle('get-history', async () => {
+// Add this handler for getting borrowing history
+ipcMain.handle('get-history', async (event) => {
     return new Promise((resolve) => {
-        const db = new sqlite3.Database('student.db');
-        
-        db.all(`
+        const query = `
             SELECT 
-                b.id as borrow_id,
-                s.id as student_id,
+                b.id,
+                b.student_id,
                 s.name as student_name,
-                s.username,
-                bk.id as book_id,
+                b.book_id,
                 bk.name as book_name,
                 b.borrow_date,
                 b.due_date,
@@ -480,14 +477,16 @@ ipcMain.handle('get-history', async () => {
             JOIN students s ON b.student_id = s.id
             JOIN books bk ON b.book_id = bk.id
             ORDER BY b.borrow_date DESC
-        `, [], (err, rows) => {
+        `;
+
+        db.all(query, [], (err, rows) => {
             if (err) {
-                console.error('Database error:', err);
+                console.error("Error fetching history:", err);
                 resolve({ success: false, error: err.message });
                 return;
             }
-            
-            // Format dates before sending
+
+            // Format dates
             const formattedRows = rows.map(row => ({
                 ...row,
                 borrow_date: new Date(row.borrow_date).toISOString(),
@@ -497,8 +496,6 @@ ipcMain.handle('get-history', async () => {
 
             resolve({ success: true, history: formattedRows });
         });
-
-        db.close();
     });
 });
 
@@ -636,12 +633,22 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
+        frame: false,
+        autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: path.join(__dirname, 'preload.js')
+            preload: path.join(__dirname, 'preload.js'),
+            webSecurity: true,
+            allowRunningInsecureContent: false
         }
     });
+
+    // Get the correct base path for resources
+    const basePath = isDev ? __dirname : process.resourcesPath;
+
+    // Load the index.html file
+    mainWindow.loadFile('index.html');
 
     // Add error handling for failed loads
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {

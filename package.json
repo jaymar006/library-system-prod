@@ -35,7 +35,13 @@
         ]
       }
     ],
-    "asar": false
+    "asar": false,
+    "extraFiles": [
+      {
+        "from": "student.db",
+        "to": "student.db"
+      }
+    ]
   },
   "keywords": [],
   "author": "",
