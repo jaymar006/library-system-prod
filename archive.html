@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <title>Archive - Library Management System</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <script src="./node_modules/flowbite/dist/flowbite.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #64748b;
+        }
+
+        /* Table styles */
+        .archive-table th {
+            position: relative;
+        }
+
+        .sortable {
+            cursor: pointer;
+        }
+
+        .sortable:after {
+            content: '↕';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #64748b;
+            opacity: 0.8;
+        }
+
+        .sortable.asc:after {
+            content: '↑';
+            color: #64748b;
+            opacity: 1;
+        }
+
+        .sortable.desc:after {
+            content: '↓';
+            color: #64748b;
+            opacity: 1;
+        }
+
+        /* Checkbox styles */
+        .custom-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #94a3b8;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .custom-checkbox:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        /* Animations */
+        .animate-pulse-soft {
+            animation: pulse-soft 2s infinite;
+        }
+        
+        @keyframes pulse-soft {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            transition: all 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 40;
+            overflow-y: auto;
+        }
+
+        .sidebar:hover {
+            width: 256px !important;
+            min-width: 256px !important;
+            max-width: 256px !important;
+        }
+
+        .sidebar:not(:hover) {
+            width: 80px !important;
+            min-width: 80px !important;
+            max-width: 80px !important;
+        }
+
+        .sidebar:not(:hover) .nav-text,
+        .sidebar:not(:hover) .welcome-text,
+        .sidebar:not(:hover) .footer-text {
+            display: none;
+        }
+
+        .sidebar:not(:hover) .nav-icon {
+            margin-right: 0;
+        }
+
+        .sidebar:not(:hover) .nav-item {
+            justify-content: center;
+            padding: 0.75rem;
+        }
+
+        .sidebar:not(:hover) .profile-section {
+            padding: 0.5rem;
+        }
+
+        .sidebar:not(:hover) .profile-image {
+            width: 40px;
+            height: 40px;
+        }
+
+        .sidebar:not(:hover) .footer-section {
+            padding: 0.5rem;
+        }
+
+        /* Add styles for main content to account for fixed sidebar */
+        main {
+            margin-left: 80px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar:hover + main {
+            margin-left: 256px;
+        }
+
+        /* Fix icon positioning */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .nav-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-secondary-50 font-sans text-base text-secondary-600 relative antialiased">
+    <div class="fixed top-0 right-0 z-50 flex gap-2 select-none p-2">
+        <button onclick="window.electronAPI.minimize()" title="Minimize" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-blue-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 18"/></svg>
+        </button>
+        <button onclick="window.electronAPI.maximize()" title="Maximize/Restore" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-green-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" stroke-width="2"/></svg>
+        </button>
+        <button onclick="window.electronAPI.close()" title="Close" class="w-8 h-8 flex items-center justify-center rounded hover:bg-red-100 active:bg-red-200 text-gray-600 hover:text-red-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 6l12 12M6 18L18 6"/></svg>
+        </button>
+    </div>
+    <div class="flex min-h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar bg-gray-100 w-64 min-w-[256px] max-w-[256px] flex flex-col py-6 px-3 select-none shrink-0 shadow-xl z-10 border-r border-gray-200 relative">
+            <div class="flex flex-col items-center space-y-3 mb-8 profile-section">
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-primary-100 rounded-full opacity-70 blur-md transform group-hover:scale-110 transition-all duration-300"></div>
+                    <div class="relative bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-md profile-image">
+                        <img alt="Admin" class="rounded-full w-12 h-12 object-cover" src="assets/pic/removebgroyal.png"/>
+                    </div>
+                </div>
+                <div class="text-center welcome-text">
+                    <p class="text-xs font-bold uppercase tracking-wider mb-1 text-gray-500">Welcome</p>
+                    <p class="text-lg font-bold text-gray-800">ADMIN</p>
+                </div>
+            </div>
+            
+            <nav class="w-full flex flex-col space-y-1 font-medium text-sm mt-2">
+                <button onclick="window.location.href='admindashboard.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-chart-line w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Dashboard</span>
+                </button>
+                
+                <button onclick="window.location.href='adminstudentmodule.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-users w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Students</span>
+                </button>
+                
+                <button onclick="window.location.href='adminbookmodule.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-book w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Books</span>
+                </button>
+                
+                <button onclick="window.location.href='adminhistorymodule.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-history w-5 text-center nav-icon"></i>
+                    <span class="nav-text">History</span>
+                </button>
+                
+                <button onclick="window.location.href='borrowed.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-hand-holding w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Borrow Book</span>
+                </button>
+                
+                <button onclick="window.location.href='returned.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-undo w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Return Book</span>
+                </button>
+                
+                <button onclick="window.location.href='rewards.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-trophy w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Rewards</span>
+                </button>
+
+                <button id="archive-menu" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary-100 text-primary-700 font-semibold transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-archive w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Archive</span>
+                </button>
+                
+                <div class="border-t border-gray-300 my-2 px-3"></div>
+                
+                <button onclick="logout()" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-100 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-sign-out-alt w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Log Out</span>
+                </button>
+            </nav>
+            
+            <div class="mt-auto px-4 py-4 footer-section">
+                <div class="bg-primary-50 border border-primary-100 rounded-lg px-3 py-2 text-xs text-gray-700 footer-text">
+                    <p class="mb-1 font-medium text-gray-800">Royal Heirs Academy</p>
+                    <p>Library Management System</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-secondary-50">
+            <div class="ml-64 container mx-auto px-6 py-8">
+                <!-- Header Section -->
+                <header class="mb-8">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h1 class="text-3xl font-bold text-secondary-900 leading-tight">
+                                Archive
+                            </h1>
+                            <p class="mt-1 text-secondary-500">Manage deleted students and books</p>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Deleted Students Section -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-gray-800">Deleted Students</h2>
+                        <div class="flex space-x-4">
+                            <button id="restoreStudents" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                                <i class="fas fa-undo mr-2"></i>Restore Selected
+                            </button>
+                            <button id="deleteStudents" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                                <i class="fas fa-trash-alt mr-2"></i>Delete Permanently
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="archive-table min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <input type="checkbox" class="custom-checkbox" id="selectAllStudents">
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">User name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">Deleted Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="deletedStudentsTable">
+                                <!-- Table content will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Deleted Books Section -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-gray-800">Deleted Books</h2>
+                        <div class="flex space-x-4">
+                            <button id="restoreBooks" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                                <i class="fas fa-undo mr-2"></i>Restore Selected
+                            </button>
+                            <button id="deleteBooks" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                                <i class="fas fa-trash-alt mr-2"></i>Delete Permanently
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="archive-table min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <input type="checkbox" class="custom-checkbox" id="selectAllBooks">
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">ISBN</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">Title</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">Author</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">Deleted Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="deletedBooksTable">
+                                <!-- Table content will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4" id="modalTitle">Confirm Action</h3>
+            <p class="text-gray-600 mb-6" id="modalMessage">Are you sure you want to proceed with this action?</p>
+            <div class="flex justify-end space-x-4">
+                <button id="modalCancel" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                <button id="modalConfirm" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Logout function
+        function logout() {
+            // Clear any stored user data
+            localStorage.removeItem('userData');
+            // Redirect to login page
+            window.location.href = 'login.html';
+        }
+
+        // Function to show confirmation modal
+        function showConfirmationModal(title, message, onConfirm) {
+            const modal = document.getElementById('confirmationModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const confirmButton = document.getElementById('modalConfirm');
+            const cancelButton = document.getElementById('modalCancel');
+
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            confirmButton.onclick = () => {
+                onConfirm();
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+
+            cancelButton.onclick = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+        }
+
+        // Function to load deleted students
+        async function loadDeletedStudents() {
+            try {
+                const response = await fetch('http://localhost:5000/api/deleted-students');
+                const students = await response.json();
+                const tableBody = document.getElementById('deletedStudentsTable');
+                tableBody.innerHTML = '';
+
+                if (students.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                No deleted students found
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                students.forEach(student => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" class="custom-checkbox student-checkbox" data-id="${student.id}">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">${student.original_id || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${student.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${student.username}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${new Date(student.deleted_at).toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button onclick="restoreStudent('${student.id}')" class="text-green-600 hover:text-green-800 mr-3">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button onclick="deleteStudentPermanently('${student.id}')" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading deleted students:', error);
+            }
+        }
+
+        // Function to load deleted books
+        async function loadDeletedBooks() {
+            try {
+                const response = await fetch('http://localhost:5000/api/deleted-books');
+                const books = await response.json();
+                const tableBody = document.getElementById('deletedBooksTable');
+                tableBody.innerHTML = '';
+
+                if (books.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                No deleted books found
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                books.forEach(book => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" class="custom-checkbox book-checkbox" data-id="${book.id}">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">${book.ISBN || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${book.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${book.author}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${new Date(book.deleted_at).toLocaleString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button onclick="restoreBook('${book.id}')" class="text-green-600 hover:text-green-800 mr-3">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            <button onclick="deleteBookPermanently('${book.id}')" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading deleted books:', error);
+            }
+        }
+
+        // Function to restore a student
+        async function restoreStudent(id) {
+            showConfirmationModal(
+                'Restore Student',
+                'Are you sure you want to restore this student?',
+                async () => {
+                    try {
+                        const response = await fetch(`http://localhost:5000/api/restore-student/${id}`, { 
+                            method: 'POST'
+                        });
+                        if (!response.ok) throw new Error('Failed to restore student');
+                        loadDeletedStudents();
+                    } catch (error) {
+                        console.error('Error restoring student:', error);
+                    }
+                }
+            );
+        }
+
+        // Function to delete a student permanently
+        async function deleteStudentPermanently(id) {
+            showConfirmationModal(
+                'Delete Student Permanently',
+                'Are you sure you want to permanently delete this student? This action cannot be undone.',
+                async () => {
+                    try {
+                        const response = await fetch(`http://localhost:5000/api/delete-student-permanent/${id}`, { 
+                            method: 'DELETE'
+                        });
+                        if (!response.ok) throw new Error('Failed to delete student');
+                        loadDeletedStudents();
+                    } catch (error) {
+                        console.error('Error deleting student:', error);
+                    }
+                }
+            );
+        }
+
+        // Function to restore a book
+        async function restoreBook(id) {
+            showConfirmationModal(
+                'Restore Book',
+                'Are you sure you want to restore this book?',
+                async () => {
+                    try {
+                        const response = await fetch(`http://localhost:5000/api/restore-book/${id}`, { 
+                            method: 'POST'
+                        });
+                        if (!response.ok) throw new Error('Failed to restore book');
+                        loadDeletedBooks();
+                    } catch (error) {
+                        console.error('Error restoring book:', error);
+                    }
+                }
+            );
+        }
+
+        // Function to delete a book permanently
+        async function deleteBookPermanently(id) {
+            showConfirmationModal(
+                'Delete Book Permanently',
+                'Are you sure you want to permanently delete this book? This action cannot be undone.',
+                async () => {
+                    try {
+                        const response = await fetch(`http://localhost:5000/api/delete-book-permanent/${id}`, { 
+                            method: 'DELETE'
+                        });
+                        if (!response.ok) throw new Error('Failed to delete book');
+                        loadDeletedBooks();
+                    } catch (error) {
+                        console.error('Error deleting book:', error);
+                    }
+                }
+            );
+        }
+
+        // Function to restore selected students
+        async function restoreSelectedStudents() {
+            const selectedStudents = Array.from(document.querySelectorAll('.student-checkbox:checked'))
+                .map(checkbox => checkbox.dataset.id);
+
+            if (selectedStudents.length === 0) {
+                alert('Please select at least one student to restore.');
+                return;
+            }
+
+            showConfirmationModal(
+                'Restore Selected Students',
+                `Are you sure you want to restore ${selectedStudents.length} selected student(s)?`,
+                async () => {
+                    try {
+                        const response = await fetch('http://localhost:5000/api/restore-students', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ids: selectedStudents })
+                        });
+                        if (!response.ok) throw new Error('Failed to restore students');
+                        loadDeletedStudents();
+                    } catch (error) {
+                        console.error('Error restoring students:', error);
+                    }
+                }
+            );
+        }
+
+        // Function to delete selected students permanently
+        async function deleteSelectedStudents() {
+            const selectedStudents = Array.from(document.querySelectorAll('.student-checkbox:checked'))
+                .map(checkbox => checkbox.dataset.id);
+
+            if (selectedStudents.length === 0) {
+                alert('Please select at least one student to delete.');
+                return;
+            }
+
+            showConfirmationModal(
+                'Delete Selected Students Permanently',
+                `Are you sure you want to permanently delete ${selectedStudents.length} selected student(s)? This action cannot be undone.`,
+                async () => {
+                    try {
+                        for (const id of selectedStudents) {
+                            await fetch(`http://localhost:5000/api/delete-student-permanent/${id}`, {
+                                method: 'DELETE'
+                            });
+                        }
+                        loadDeletedStudents();
+                    } catch (error) {
+                        console.error('Error deleting students:', error);
+                    }
+                }
+            );
+        }
+
+        // Function to restore selected books
+        async function restoreSelectedBooks() {
+            const selectedBooks = Array.from(document.querySelectorAll('.book-checkbox:checked'))
+                .map(checkbox => checkbox.dataset.id);
+
+            if (selectedBooks.length === 0) {
+                alert('Please select at least one book to restore.');
+                return;
+            }
+
+            showConfirmationModal(
+                'Restore Selected Books',
+                `Are you sure you want to restore ${selectedBooks.length} selected book(s)?`,
+                async () => {
+                    try {
+                        const response = await fetch('http://localhost:5000/api/restore-books', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ids: selectedBooks })
+                        });
+                        if (!response.ok) throw new Error('Failed to restore books');
+                        loadDeletedBooks();
+                    } catch (error) {
+                        console.error('Error restoring books:', error);
+                    }
+                }
+            );
+        }
+
+        // Function to delete selected books permanently
+        async function deleteSelectedBooks() {
+            const selectedBooks = Array.from(document.querySelectorAll('.book-checkbox:checked'))
+                .map(checkbox => checkbox.dataset.id);
+
+            if (selectedBooks.length === 0) {
+                alert('Please select at least one book to delete.');
+                return;
+            }
+
+            showConfirmationModal(
+                'Delete Selected Books Permanently',
+                `Are you sure you want to permanently delete ${selectedBooks.length} selected book(s)? This action cannot be undone.`,
+                async () => {
+                    try {
+                        for (const id of selectedBooks) {
+                            await fetch(`http://localhost:5000/api/delete-book-permanent/${id}`, {
+                                method: 'DELETE'
+                            });
+                        }
+                        loadDeletedBooks();
+                    } catch (error) {
+                        console.error('Error deleting books:', error);
+                    }
+                }
+            );
+        }
+
+        // Event listeners for select all checkboxes
+        document.getElementById('selectAllStudents').addEventListener('change', function() {
+            document.querySelectorAll('.student-checkbox').forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        document.getElementById('selectAllBooks').addEventListener('change', function() {
+            document.querySelectorAll('.book-checkbox').forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        // Event listeners for bulk action buttons
+        document.getElementById('restoreStudents').addEventListener('click', restoreSelectedStudents);
+        document.getElementById('deleteStudents').addEventListener('click', deleteSelectedStudents);
+        document.getElementById('restoreBooks').addEventListener('click', restoreSelectedBooks);
+        document.getElementById('deleteBooks').addEventListener('click', deleteSelectedBooks);
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDeletedStudents();
+            loadDeletedBooks();
+        });
+    </script>
+</body>
+</html> 

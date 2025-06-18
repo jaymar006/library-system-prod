@@ -1,0 +1,2170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="./node_modules/flowbite/dist/flowbite.min.js"></script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #64748b;
+        }
+
+        /* Table styles */
+        .books-table th {
+            position: relative;
+        }
+
+        .sortable {
+            cursor: pointer;
+        }
+
+        .sortable:after {
+            content: '↕';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        .sortable.asc:after {
+            content: '↑';
+            opacity: 1;
+        }
+
+        .sortable.desc:after {
+            content: '↓';
+            opacity: 1;
+        }
+
+        /* Animations */
+        .animate-pulse-soft {
+            animation: pulse-soft 2s infinite;
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+
+        /* Custom styles that can't be achieved with Tailwind */
+        .menu-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            transition: all 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 40;
+            overflow-y: auto;
+            width: 80px;
+            min-width: 80px;
+            max-width: 80px;
+        }
+
+        .sidebar:hover {
+            width: 256px !important;
+            min-width: 256px !important;
+            max-width: 256px !important;
+        }
+
+        .sidebar:not(:hover) {
+            width: 80px !important;
+            min-width: 80px !important;
+            max-width: 80px !important;
+        }
+
+        .sidebar:not(:hover) .nav-text,
+        .sidebar:not(:hover) .welcome-text,
+        .sidebar:not(:hover) .footer-text {
+            display: none;
+        }
+
+        .sidebar:not(:hover) .nav-icon {
+            margin-right: 0;
+        }
+
+        .sidebar:not(:hover) .nav-item {
+            justify-content: center;
+            padding: 0.75rem;
+        }
+
+        .sidebar:not(:hover) .profile-section {
+            padding: 0.5rem;
+        }
+
+        .sidebar:not(:hover) .profile-image {
+            width: 40px;
+            height: 40px;
+        }
+
+        .sidebar:not(:hover) .footer-section {
+            padding: 0.5rem;
+        }
+
+        /* Add styles for main content to account for fixed sidebar */
+        main {
+            margin-left: 80px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar:hover + main {
+            margin-left: 256px;
+        }
+
+
+        /* Fix icon positioning */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .nav-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Remove burger menu styles since we're using hover */
+        .burger-menu,
+        .burger-icon {
+            display: none;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .books-table th,
+            .books-table td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.875rem;
+            }
+
+            .books-table th:first-child,
+            .books-table td:first-child {
+                position: sticky;
+                left: 0;
+                background-color: inherit;
+                z-index: 10;
+            }
+
+            .books-table th:first-child {
+                background-color: #f1f5f9;
+            }
+
+            .books-table tr:hover td:first-child {
+                background-color: #f8fafc;
+            }
+
+            .books-table .actions-cell {
+                position: sticky;
+                right: 0;
+                background-color: inherit;
+                z-index: 10;
+            }
+
+            .books-table tr:hover .actions-cell {
+                background-color: #f8fafc;
+            }
+
+            .pagination-controls {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .pagination-controls > div {
+                width: 100%;
+            }
+
+            .pagination-controls select {
+                width: 100%;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-actions > div {
+                width: 100%;
+            }
+
+            .search-container {
+                width: 100%;
+            }
+
+            .search-container input {
+                width: 100%;
+            }
+        }
+
+        /* Add shadow to sticky columns */
+        .books-table th:first-child::after,
+        .books-table td:first-child::after,
+        .books-table .actions-cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            pointer-events: none;
+        }
+
+        .books-table th:first-child::after,
+        .books-table td:first-child::after {
+            right: 0;
+            background: linear-gradient(to right, rgba(0,0,0,0.05), transparent);
+        }
+
+        .books-table .actions-cell::before {
+            left: 0;
+            background: linear-gradient(to left, rgba(0,0,0,0.05), transparent);
+        }
+
+        /* Add text truncation styles */
+        .books-table td.truncate-cell {
+            max-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .books-table td.truncate-cell:hover {
+            position: relative;
+        }
+
+        .books-table td.truncate-cell:hover::after {
+            content: attr(data-full-text);
+            position: absolute;
+            left: 0;
+            top: 100%;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 20;
+            white-space: normal;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        /* Responsive styles for 12-inch laptop screens (max-width: 1366px) */
+        
+        /* Make table horizontally scrollable if needed */
+        .books-table {
+            width: 100%;
+            min-width: 600px;
+        }
+        .overflow-x-auto {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="bg-secondary-50 font-sans text-base text-secondary-600 relative antialiased">
+    <div class="fixed top-0 right-0 z-50 flex gap-2 select-none p-2">
+        <button onclick="window.electronAPI.minimize()" title="Minimize" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-blue-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewbox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 18"/></svg>
+        </button>
+        <button onclick="window.electronAPI.maximize()" title="Maximize/Restore" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-green-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewbox="0 0 24 24" stroke="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" stroke-width="2"/></svg>
+        </button>
+        <button onclick="window.electronAPI.close()" title="Close" class="w-8 h-8 flex items-center justify-center rounded hover:bg-red-100 active:bg-red-200 text-gray-600 hover:text-red-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewbox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 6l12 12M6 18L18 6"/></svg>
+        </button>
+    </div>
+    <div class="flex min-h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar bg-gray-100 flex flex-col py-6 px-3 select-none shrink-0 shadow-xl z-10 border-r border-gray-200">
+            <div class="flex flex-col items-center space-y-3 mb-8 profile-section">
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-primary-100 rounded-full opacity-70 blur-md transform group-hover:scale-110 transition-all duration-300"></div>
+                    <div class="relative bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-md profile-image">
+                        <img alt="Admin" class="rounded-full w-12 h-12 object-cover" src="assets/pic/removebgroyal.png"/>
+                    </div>
+                </div>
+                <div class="text-center welcome-text">
+                    <p class="text-xs font-bold uppercase tracking-wider mb-1 text-gray-500">Welcome</p>
+                    <p class="text-lg font-bold text-gray-800">ADMIN</p>
+                </div>
+            </div>
+            
+            <nav class="w-full flex flex-col space-y-1 font-medium text-sm mt-2">
+                <button onclick="window.location.href='admindashboard.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-chart-line w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Dashboard</span>
+                </button>
+                
+                <button onclick="window.location.href='adminstudentmodule.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-users w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Students</span>
+                </button>
+                
+                <button id="books-menu" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary-100 text-primary-700 font-semibold transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-book w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Books</span>
+                </button>
+                
+                <button onclick="window.location.href='adminhistorymodule.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-history w-5 text-center nav-icon"></i>
+                    <span class="nav-text">History</span>
+                </button>
+                
+                <button onclick="window.location.href='borrowed.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-hand-holding w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Borrow Book</span>
+                </button>
+                
+                <button onclick="window.location.href='returned.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-undo w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Return Book</span>
+                </button>
+                
+                <button onclick="window.location.href='rewards.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-trophy w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Rewards</span>
+                </button>
+
+                <button onclick="window.location.href='archive.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-archive w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Archive</span>
+                </button>
+                
+                <div class="border-t border-gray-300 my-2 px-3"></div>
+                
+                <button onclick="logout()" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-100 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-sign-out-alt w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Log Out</span>
+                </button>
+            </nav>
+            
+            <div class="mt-auto px-4 py-4 footer-section">
+                <div class="bg-primary-50 border border-primary-100 rounded-lg px-3 py-2 text-xs text-gray-700 footer-text">
+                    <p class="mb-1 font-medium text-gray-800">Royal Heirs Academy</p>
+                    <p>Library Management System</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 overflow-x-auto bg-secondary-50">
+            <div class="container mx-auto px-4 py-6">
+                <!-- Header Section -->
+                <header class="mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h1 class="text-2xl font-bold text-secondary-900 leading-tight">
+                                Book Management
+                            </h1>
+                            <p class="mt-1 text-secondary-500 text-sm">Manage library books and information</p>
+        </div>
+
+                        <div class="mt-4 md:mt-0 flex flex-wrap gap-2">
+                            <button onclick="exportBooksToExcel()" class="px-3 py-1.5 bg-primary-600 text-white rounded-lg shadow hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all flex items-center text-sm">
+                                <i class="fas fa-file-excel mr-1.5"></i>
+                                <span>Export to Excel</span>
+                            </button>
+                            <button onclick="document.getElementById('importBooksExcel').click()" class="px-3 py-1.5 bg-primary-600 text-white rounded-lg shadow hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all flex items-center text-sm">
+                                <i class="fas fa-file-import mr-1.5"></i>
+                                <span>Import from Excel</span>
+                            </button>
+                            <button onclick="downloadImportTemplate()" class="text-primary-600 hover:text-primary-700 underline flex items-center text-sm">
+                                <i class="fas fa-download mr-1"></i>
+                                <span>Download Template</span>
+                            </button>
+                            <input type="file" id="importBooksExcel" accept=".xlsx,.xls" style="display: none;" onchange="handleBooksExcelImport(event)">
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Action Bar -->
+                <div class="bg-white rounded-xl shadow p-3 mb-4 flex flex-wrap items-center justify-between gap-2 border">
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="addBook()" class="px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center text-sm">
+                            <i class="fas fa-book-medical mr-1.5"></i>
+                            <span>Add Book</span>
+                        </button>
+                        <button id="openDeleteBookModal-btn" class="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center text-sm">
+                            <i class="fas fa-trash-alt mr-1.5"></i>
+                            <span>Delete Book</span>
+                        </button>
+                        <button id="deleteSelectedBooks-btn" class="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center hidden text-sm">
+                            <i class="fas fa-trash-alt mr-1.5"></i>
+                            <span>Delete Selected</span>
+                        </button>
+                    </div>
+                    <div class="search-container relative flex items-center space-x-2">
+                        <select 
+                            id="searchColumn" 
+                            class="px-3 py-2 rounded-lg border border-secondary-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white text-sm">
+                            <option value="all">All Columns</option>
+                            <option value="id">Book ID</option>
+                            <option value="name">Book Name</option>
+                            <option value="author">Author</option>
+                            <option value="shelf_location">Shelf Location</option>
+                        </select>
+                        <div class="relative flex-grow">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400"></i>
+                            <input 
+                                class="pl-10 pr-4 py-2 rounded-lg border border-secondary-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-full text-sm" 
+                                type="text" 
+                                id="bookSearch" 
+                                placeholder="Search books..." 
+                                oninput="searchBooks()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Books Table -->
+                <div class="bg-white rounded-xl shadow-card overflow-hidden border border-secondary-100">
+                    <div class="overflow-x-auto">
+                        <div class="min-w-full inline-block align-middle">
+                            <div class="overflow-hidden">
+                                <table class="books-table min-w-full divide-y divide-secondary-100">
+                                    <thead>
+                                        <tr class="bg-secondary-100 text-secondary-700">
+                                            <th class="p-2 text-left font-semibold">
+                                                <input type="checkbox" id="selectAllBooks" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500">
+                                            </th>
+                                            <th class="p-2 text-left font-semibold sortable whitespace-nowrap text-sm" data-sort="id">Book ID</th>
+                                            <th class="p-2 text-left font-semibold sortable whitespace-nowrap max-w-[180px] text-sm" data-sort="name">Book Name</th>
+                                            <th class="p-2 text-left font-semibold sortable whitespace-nowrap max-w-[120px] text-sm" data-sort="author">Author</th>
+                                            <th class="p-2 text-left font-semibold sortable whitespace-nowrap text-sm" data-sort="shelf_location">Shelf Location</th>
+                                            <th class="p-2 text-left font-semibold whitespace-nowrap text-sm">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-secondary-100">
+                                        <!-- Book data will be populated here -->
+                                        <tr>
+                                            <td colspan="5" class="p-4 text-center text-secondary-500">
+                                                <div class="py-8">
+                                                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mb-4"></div>
+                                                    <p class="text-sm">Loading books...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Book Details Modal -->
+    <div id="bookDetailsModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-4 md:p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 sticky top-0 bg-white z-10 pb-2 border-b border-secondary-200">
+                <h2 class="text-xl font-bold text-secondary-900">Book Details</h2>
+                <button onclick="closeBookDetailsModal()" class="text-secondary-400 hover:text-secondary-600 focus:outline-none">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="bookDetailsContent" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <!-- Book details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Book Modal -->
+    <div id="addBookModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-secondary-900">Add Books</h2>
+                <button onclick="closeBookModal()" class="text-secondary-400 hover:text-secondary-600 focus:outline-none">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="bookForms" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                <div class="book-form border border-secondary-200 p-4 rounded-lg bg-secondary-50">
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">ISBN</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="isbn_0" name="isbn" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Book Name</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="bookName_0" name="bookName" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Author</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="author_0" name="author" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Publication Year</label>
+                            <input type="number" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="publicationYear_0" name="publicationYear" min="1000" max="9999" step="1" placeholder="YYYY" oninput="validateYear(this)" maxlength="4">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Category</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="category_0" name="category">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Language</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="language_0" name="language">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Shelf Location</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="shelfLocation_0" name="shelfLocation">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Copies Available</label>
+                            <input type="number" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="copiesAvailable_0" name="copiesAvailable">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Number of Pages</label>
+                            <input type="number" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="numberOfPages_0" name="numberOfPages">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Tags (comma-separated)</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="tags_0" name="tags" placeholder="e.g., Fiction, Mystery, Adventure">
+                </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Book Cover Image</label>
+                            <input type="file" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="bookImage_0" name="bookImage" accept="image/*" onchange="previewImage(this)">
+                            <div id="imagePreview_0" class="image-preview mt-2"></div>
+            </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-between mt-6">
+                <button type="button" onclick="addMoreBookFields()" class="px-3 py-1.5 bg-secondary-100 text-secondary-700 rounded-lg hover:bg-secondary-200 transition-colors flex items-center text-sm">
+                    <i class="fas fa-plus mr-1.5"></i>
+                    <span>Add Another</span>
+                </button>
+                <button type="button" onclick="submitBooks()" class="px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center text-sm">
+                    <i class="fas fa-save mr-1.5"></i>
+                    <span>Save Books</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Book Modal -->
+    <div id="deleteBookModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-secondary-900">Delete Book</h2>
+                <button id="closeDeleteBookModal" class="text-secondary-400 hover:text-secondary-600 focus:outline-none">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <p class="text-secondary-600 mb-4 text-sm">Enter book ID or name to delete the record. This action cannot be undone.</p>
+            
+            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 mb-4" id="deleteBookId" placeholder="Enter Book ID or Name" required>
+            
+            <button onclick="deleteBook()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center text-sm">
+                <i class="fas fa-trash-alt mr-1.5"></i>
+                <span>Delete Book</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Edit Book Modal -->
+    <div id="editBookModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4" style="max-height: 90vh; overflow-y: auto;">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-secondary-900">Edit Book Details</h2>
+                <button onclick="closeEditBookModal()" class="text-secondary-400 hover:text-secondary-600 focus:outline-none">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <input type="hidden" id="editBookId">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Shelf Location</label>
+                    <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="editShelfLocation" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Copies Available</label>
+                    <input type="number" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="editCopiesAvailable" required min="0">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Category</label>
+                    <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="editCategory">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Language</label>
+                    <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="editLanguage">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Tags (comma-separated)</label>
+                    <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="editTags" placeholder="e.g., Fiction, Mystery, Adventure">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Book Cover Image</label>
+                    <input type="file" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="editBookImage" accept="image/*" onchange="previewEditImage(this)">
+                    <div id="editImagePreview" class="image-preview mt-2"></div>
+                </div>
+            </div>
+            <button onclick="updateBook()" class="w-full mt-6 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center text-sm">
+                <i class="fas fa-save mr-1.5"></i>
+                <span>Save Changes</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="modal-content bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4 success">
+            <div class="text-center">
+                <i class="fas fa-check-circle text-green-500 text-4xl mb-4"></i>
+                <p id="modalMessage" class="text-lg font-semibold"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let bookFormCount = 1;
+        let currentSort = {
+            column: null,
+            direction: 'asc'
+        };
+        let currentPage = 1;
+        let booksPerPage = 5;
+        let selectedBookIds = new Set();
+        let isSelectAllChecked = false;
+
+        // Function to fetch books
+        async function fetchBooks() {
+            try {
+                const result = await window.electronAPI.getBooks();
+                if (result.success) {
+                    const tableBody = document.querySelector(".books-table tbody");
+                    
+                    // Remove any existing pagination controls
+                    const existingPagination = document.querySelector('.pagination-controls');
+                    if (existingPagination) {
+                        existingPagination.remove();
+                    }
+
+                    // Show loading indicator
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="p-4 text-center text-secondary-500">
+                                <div class="py-8">
+                                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mb-4"></div>
+                                    <p class="text-sm">Loading books...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+
+                    // Calculate pagination values
+                    const totalBooks = result.books.length;
+                    const totalPages = Math.ceil(totalBooks / booksPerPage);
+                    const startIndex = (currentPage - 1) * booksPerPage;
+                    const endIndex = Math.min(startIndex + booksPerPage, totalBooks);
+                    const currentBooks = result.books.slice(startIndex, endIndex);
+
+                    // Create pagination controls
+                    const paginationControls = document.createElement('div');
+                    paginationControls.className = 'pagination-controls flex justify-between items-center my-4 text-sm text-secondary-600';
+                    paginationControls.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs font-medium bg-primary-50 text-primary-700 px-2.5 py-1 rounded-full">
+                                ${totalBooks === 0 ? '0-0' : `${startIndex + 1}-${endIndex}`} of ${totalBooks}
+                            </span>
+                            <button id="prev-page" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-secondary-100 transition-all ${currentPage === 1 ? 'opacity-50 cursor-not-allowed text-secondary-400' : 'text-secondary-700'}" ${currentPage === 1 ? 'disabled' : ''}>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span class="font-medium">Page ${currentPage} of ${totalPages || 1}</span>
+                            <button id="next-page" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-secondary-100 transition-all ${currentPage >= totalPages ? 'opacity-50 cursor-not-allowed text-secondary-400' : 'text-secondary-700'}" ${currentPage >= totalPages ? 'disabled' : ''}>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div>
+                            <select id="rows-per-page" class="text-sm border-secondary-200 rounded-lg focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 bg-white shadow-sm">
+                                <option value="5" ${booksPerPage === 5 ? 'selected' : ''}>5 rows</option>
+                                <option value="10" ${booksPerPage === 10 ? 'selected' : ''}>10 rows</option>
+                                <option value="25" ${booksPerPage === 25 ? 'selected' : ''}>25 rows</option>
+                            </select>
+                        </div>
+                    `;
+
+                    // Insert pagination controls after the table
+                    const table = document.querySelector(".books-table").closest('.bg-white');
+                    table.insertAdjacentElement('afterend', paginationControls);
+
+                    // Clear the table body
+                    tableBody.innerHTML = "";
+
+                    // Render the current page of books
+                    if (currentBooks.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="p-4 text-center text-secondary-500">
+                                    <div class="py-8">
+                                        <i class="fas fa-book text-secondary-300 text-4xl mb-4"></i>
+                                        <p class="text-lg font-medium">No books available</p>
+                                        <p class="text-sm mt-2">Add new books to get started</p>
+                                    </div>
+                            </td>
+                            </tr>
+                        `;
+                    } else {
+                        currentBooks.forEach((book) => {
+                            const row = document.createElement("tr");
+                            row.className = "hover:bg-secondary-50 transition-colors";
+                            row.innerHTML = `
+                                <td class="p-3">
+                                    <input type="checkbox" class="book-checkbox w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500" data-book-id="${book.id}" ${selectedBookIds.has(book.id) ? 'checked' : ''}>
+                                </td>
+                                <td class="p-3 whitespace-nowrap">${book.id}</td>
+                                <td class="p-3 font-medium text-secondary-900">${book.name}</td>
+                                <td class="p-3">${book.author}</td>
+                                <td class="p-3">${book.shelf_location || "N/A"}</td>
+                                <td class="p-3 actions-cell">
+                                    <div class="flex space-x-2">
+                                        <button onclick="editBook(${book.id}, '${book.shelf_location || ''}', ${book.copies_available || 0}, '${book.category || ''}', '${book.language || ''}', '${book.tags || ''}', '${book.image_url || ''}')" class="p-1.5 rounded-full text-primary-600 hover:text-primary-800 hover:bg-primary-50 transition-colors" title="Edit book">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="showBookDetails(${book.id})" class="p-1.5 rounded-full text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors" title="View details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    }
+
+                    // Add event listeners for pagination buttons
+                    document.getElementById('prev-page')?.addEventListener('click', () => {
+                        if (currentPage > 1) {
+                            currentPage--;
+                            fetchBooks();
+                        }
+                    });
+
+                    document.getElementById('next-page')?.addEventListener('click', () => {
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            fetchBooks();
+                        }
+                    });
+
+                    // Add event listener for rows per page selector
+                    document.getElementById('rows-per-page')?.addEventListener('change', (e) => {
+                        booksPerPage = parseInt(e.target.value);
+                        currentPage = 1; // Reset to first page
+                        fetchBooks();
+                    });
+
+                    // Add click event listeners to sortable headers
+                    document.querySelectorAll('.sortable').forEach(header => {
+                        header.addEventListener('click', () => {
+                            const column = header.dataset.sort;
+                            const direction = currentSort.column === column && currentSort.direction === 'asc' ? 'desc' : 'asc';
+                            
+                            // Remove sort classes from all headers
+                            document.querySelectorAll('.sortable').forEach(h => {
+                                h.classList.remove('asc', 'desc');
+                            });
+                            
+                            // Add sort class to current header
+                            header.classList.add(direction);
+                            
+                            currentSort = { column, direction };
+                            sortTable(column, direction);
+                        });
+                    });
+                } else {
+                    console.error("Error fetching books:", result.error);
+                    showModal('Error fetching books data', 'error');
+                }
+            } catch (error) {
+                console.error("Error fetching books:", error);
+                showModal('Error fetching books data', 'error');
+            }
+        }
+
+        // Function to add book
+        function addBook() {
+            document.getElementById('addBookModal').style.display = 'flex';
+        }
+
+        // Function to close book modal
+        function closeBookModal() {
+            document.getElementById('addBookModal').style.display = 'none';
+            resetBookForm();
+        }
+
+        // Function to reset book form
+        function resetBookForm() {
+            const container = document.getElementById('bookForms');
+            container.innerHTML = `
+                <div class="book-form border border-secondary-200 p-4 rounded-lg bg-secondary-50">
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">ISBN</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="isbn_0" name="isbn" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Book Name</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="bookName_0" name="bookName" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Author</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="author_0" name="author" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Publication Year</label>
+                            <input type="number" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="publicationYear_0" name="publicationYear" min="1000" max="9999" step="1" placeholder="YYYY" oninput="validateYear(this)" maxlength="4">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Category</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="category_0" name="category">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Language</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="language_0" name="language">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Shelf Location</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="shelfLocation_0" name="shelfLocation">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Copies Available</label>
+                            <input type="number" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="copiesAvailable_0" name="copiesAvailable">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Number of Pages</label>
+                            <input type="number" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="numberOfPages_0" name="numberOfPages">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Tags (comma-separated)</label>
+                            <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="tags_0" name="tags" placeholder="e.g., Fiction, Mystery, Adventure">
+                </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-secondary-700 mb-1">Book Cover Image</label>
+                            <input type="file" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="bookImage_0" name="bookImage" accept="image/*" onchange="previewImage(this)">
+                            <div id="imagePreview_0" class="image-preview mt-2"></div>
+            </div>
+                    </div>
+                </div>
+            `;
+            bookFormCount = 1;
+        }
+
+        // Function to add more book fields
+        function addMoreBookFields() {
+            const container = document.getElementById('bookForms');
+            const newForm = document.createElement('div');
+            newForm.className = 'book-form border border-secondary-200 p-4 rounded-lg bg-secondary-50 relative';
+            newForm.innerHTML = `
+                <button type="button" class="absolute top-2 right-2 text-secondary-400 hover:text-secondary-600 focus:outline-none" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">ISBN</label>
+                        <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="isbn_${bookFormCount}" name="isbn" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Book Name</label>
+                        <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="bookName_${bookFormCount}" name="bookName" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Author</label>
+                        <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="author_${bookFormCount}" name="author" required>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Publication Year</label>
+                        <input type="number" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="publicationYear_${bookFormCount}" name="publicationYear" min="1000" max="9999" step="1" placeholder="YYYY" oninput="validateYear(this)" maxlength="4">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Category</label>
+                        <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="category_${bookFormCount}" name="category">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Language</label>
+                        <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="language_${bookFormCount}" name="language">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Shelf Location</label>
+                        <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="shelfLocation_${bookFormCount}" name="shelfLocation">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Copies Available</label>
+                        <input type="number" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="copiesAvailable_${bookFormCount}" name="copiesAvailable">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Number of Pages</label>
+                        <input type="number" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="numberOfPages_${bookFormCount}" name="numberOfPages">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Tags (comma-separated)</label>
+                        <input type="text" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="tags_${bookFormCount}" name="tags" placeholder="e.g., Fiction, Mystery, Adventure">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-secondary-700 mb-1">Book Cover Image</label>
+                        <input type="file" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" id="bookImage_${bookFormCount}" name="bookImage" accept="image/*" onchange="previewImage(this)">
+                        <div id="imagePreview_${bookFormCount}" class="image-preview mt-2"></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(newForm);
+            bookFormCount++;
+        }
+
+        // Function to preview image
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview_' + input.id.split('_')[1]);
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 200px;">`;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Function to submit books
+        async function submitBooks() {
+            const bookForms = document.getElementsByClassName("book-form");
+            const books = [];
+
+            for (let form of bookForms) {
+                const nameInput = form.querySelector('input[name="bookName"]');
+                const authorInput = form.querySelector('input[name="author"]');
+                const isbnInput = form.querySelector('input[name="isbn"]');
+                const pubYearInput = form.querySelector('input[name="publicationYear"]');
+                const categoryInput = form.querySelector('input[name="category"]');
+                const languageInput = form.querySelector('input[name="language"]');
+                const shelfInput = form.querySelector('input[name="shelfLocation"]');
+                const copiesInput = form.querySelector('input[name="copiesAvailable"]');
+                const pagesInput = form.querySelector('input[name="numberOfPages"]');
+                const tagsInput = form.querySelector('input[name="tags"]');
+                const imageInput = form.querySelector('input[name="bookImage"]');
+
+                if (nameInput.value && authorInput.value) {
+                    const bookData = {
+                        name: nameInput.value,
+                        author: authorInput.value,
+                        isbn: isbnInput.value || null,
+                        publicationYear: pubYearInput.value ? parseInt(pubYearInput.value) : null,
+                        category: categoryInput.value || null,
+                        language: languageInput.value || null,
+                        shelfLocation: shelfInput.value || null,
+                        copiesAvailable: copiesInput.value ? parseInt(copiesInput.value) : null,
+                        numberOfPages: pagesInput.value ? parseInt(pagesInput.value) : null,
+                        tags: tagsInput.value || null
+                    };
+
+                    // Add image file if selected
+                    if (imageInput.files && imageInput.files[0]) {
+                        try {
+                            const imageFile = imageInput.files[0];
+                            const base64String = await new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onload = () => resolve(reader.result);
+                                reader.onerror = reject;
+                                reader.readAsDataURL(imageFile);
+                            });
+                            bookData.image_url = base64String;
+                        } catch (error) {
+                            console.error("Error converting image to base64:", error);
+                        }
+                    }
+
+                    books.push(bookData);
+                }
+            }
+
+            if (books.length === 0) {
+                showModal('Please fill in all required fields for at least one book.', 'warning');
+                return;
+            }
+
+            try {
+                const result = await window.electronAPI.addBooks(books);
+                if (result.success) {
+                    resetBookForm();
+                    closeBookModal();
+                    fetchBooks();
+                    showModal('Books added successfully!', 'success');
+                } else {
+                    showModal(result.error || 'Failed to add books', 'error');
+                }
+            } catch (error) {
+                console.error("Error adding books:", error);
+                showModal('Error adding books: ' + error.message, 'error');
+            }
+        }
+
+        // Function to delete book
+        async function deleteBook() {
+            const bookIdOrName = document.getElementById('deleteBookId').value.trim();
+
+            if (!bookIdOrName) {
+                showModal('Please enter a Book ID or Name to delete.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/delete-book/${encodeURIComponent(bookIdOrName)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(result);
+                } catch (e) {
+                    data = { error: result };
+                }
+
+                if (response.ok) {
+                    showModal('Book deleted successfully!', 'success');
+                    document.getElementById('deleteBookModal').style.display = 'none';
+                    document.getElementById('deleteBookId').value = '';
+                    await fetchBooks(); // Refresh the books list
+                } else {
+                    showModal(data.error || 'Failed to delete book.', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting book:', error);
+                showModal('Error deleting book: ' + error.message, 'error');
+            }
+        }
+
+        // Function to edit book
+        function editBook(bookId, shelfLocation, copiesAvailable, category, language, tags, imageUrl) {
+            document.getElementById('editBookId').value = bookId;
+            document.getElementById('editShelfLocation').value = shelfLocation || '';
+            document.getElementById('editCopiesAvailable').value = copiesAvailable || 0;
+            document.getElementById('editCategory').value = category || '';
+            document.getElementById('editLanguage').value = language || '';
+            document.getElementById('editTags').value = tags || '';
+            document.getElementById('editBookImage').value = '';
+            // Preview current image if available
+            const previewDiv = document.getElementById('editImagePreview');
+            if (imageUrl) {
+                previewDiv.innerHTML = `<img src="${imageUrl}" alt="Book Cover" style="max-width: 200px; max-height: 200px;">`;
+            } else {
+                previewDiv.innerHTML = '';
+            }
+            document.getElementById('editBookModal').style.display = 'flex';
+        }
+
+        // Function to close edit book modal
+        function closeEditBookModal() {
+            document.getElementById('editBookModal').style.display = 'none';
+        }
+
+        // Function to update book
+        async function updateBook() {
+            const bookId = document.getElementById('editBookId').value;
+            const shelfLocation = document.getElementById('editShelfLocation').value;
+            const copiesAvailable = document.getElementById('editCopiesAvailable').value;
+            const category = document.getElementById('editCategory').value;
+            const language = document.getElementById('editLanguage').value;
+            const tags = document.getElementById('editTags').value;
+            const imageInput = document.getElementById('editBookImage');
+            let imageUrl = null;
+
+            // Get the current image URL from the preview (if any)
+            const previewDiv = document.getElementById('editImagePreview');
+            const currentImage = previewDiv.querySelector('img');
+            let currentImageUrl = currentImage ? currentImage.src : null;
+
+            if (imageInput.files && imageInput.files[0]) {
+                try {
+                    const imageFile = imageInput.files[0];
+                    imageUrl = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(imageFile);
+                    });
+                } catch (error) {
+                    console.error("Error converting image to base64:", error);
+                }
+            } else {
+                imageUrl = currentImageUrl; // Use the existing image if no new image is selected
+            }
+
+            try {
+                const result = await window.electronAPI.updateBook({
+                    id: bookId,
+                    shelfLocation: shelfLocation,
+                    copiesAvailable: copiesAvailable,
+                    category: category,
+                    language: language,
+                    tags: tags,
+                    image_url: imageUrl
+                });
+                if (result.success) {
+                    showModal('Book updated successfully!', 'success');
+                    closeEditBookModal();
+                    fetchBooks();
+                } else {
+                    showModal(result.error || 'Failed to update book', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating book:', error);
+                showModal('Error updating book: ' + error.message, 'error');
+            }
+        }
+
+        // Function to clear search and reset to normal view
+        function clearSearch() {
+            document.getElementById('bookSearch').value = '';
+            currentPage = 1;
+            fetchBooks(); // Use fetchBooks instead of searchBooks to reset to normal view
+        }
+
+        // Function to search books
+        async function searchBooks() {
+            const input = document.getElementById('bookSearch').value.toLowerCase();
+            const searchColumn = document.getElementById('searchColumn').value;
+            
+            // If search is empty, reset to normal view
+            if (!input.trim()) {
+                clearSearch();
+                return;
+            }
+            
+            currentPage = 1; // Reset to first page when searching
+            
+            try {
+                // Get all books from the API
+                const result = await window.electronAPI.getBooks();
+                if (!result.success) {
+                    throw new Error('Failed to fetch books');
+                }
+
+                // Filter books based on search criteria
+                const filteredBooks = result.books.filter(book => {
+                    const id = String(book.id).toLowerCase();
+                    const name = String(book.name || '').toLowerCase();
+                    const author = String(book.author || '').toLowerCase();
+                    const category = String(book.category || '').toLowerCase();
+                    const shelfLocation = String(book.shelf_location || '').toLowerCase();
+                    
+                    switch(searchColumn) {
+                        case 'id':
+                            return id.includes(input);
+                        case 'name':
+                            return name.includes(input);
+                        case 'author':
+                            return author.includes(input);
+                        case 'category':
+                            return category.includes(input);
+                        case 'shelf_location':
+                            return shelfLocation.includes(input);
+                        case 'all':
+                        default:
+                            return id.includes(input) || 
+                                   name.includes(input) || 
+                                   author.includes(input) || 
+                                   category.includes(input) || 
+                                   shelfLocation.includes(input);
+                    }
+                });
+
+                // Store filtered books in a global variable for pagination
+                window.filteredBooks = filteredBooks;
+
+                // Calculate pagination for filtered results
+                const totalBooks = filteredBooks.length;
+                const totalPages = Math.ceil(totalBooks / booksPerPage);
+                const startIndex = (currentPage - 1) * booksPerPage;
+                const endIndex = Math.min(startIndex + booksPerPage, totalBooks);
+                const currentBooks = filteredBooks.slice(startIndex, endIndex);
+
+                // Update the table with filtered results
+                const tableBody = document.querySelector('.books-table tbody');
+                
+                if (filteredBooks.length === 0) {
+                    const searchText = document.getElementById('bookSearch').value;
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="p-4 text-center text-secondary-500">
+                                <div class="py-8">
+                                    <i class="fas fa-search text-secondary-300 text-4xl mb-4"></i>
+                                    <p class="text-lg font-medium">No results found</p>
+                                    ${searchText ? `<p class="text-sm mt-2">No books matching "${searchText}" in ${searchColumn === 'all' ? 'any column' : searchColumn} found</p>` : ''}
+                                    <button onclick="clearSearch()" class="mt-4 px-4 py-2 bg-secondary-100 text-secondary-700 rounded-lg hover:bg-secondary-200 transition-colors">Clear Search</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tableBody.innerHTML = currentBooks.map(book => `
+                        <tr class="hover:bg-secondary-50 transition-colors">
+                            <td class="p-3">
+                                <input type="checkbox" class="book-checkbox w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500" data-book-id="${book.id}" ${selectedBookIds.has(book.id) ? 'checked' : ''}>
+                            </td>
+                            <td class="p-3 whitespace-nowrap">${book.id}</td>
+                            <td class="p-3 truncate-cell" data-full-text="${book.name}">${book.name}</td>
+                            <td class="p-3 truncate-cell" data-full-text="${book.author}">${book.author}</td>
+                            <td class="p-3">${book.shelf_location || "N/A"}</td>
+                            <td class="p-3 actions-cell">
+                                <div class="flex space-x-2">
+                                    <button onclick="editBook(${book.id}, '${book.shelf_location || ''}', ${book.copies_available || 0}, '${book.category || ''}', '${book.language || ''}', '${book.tags || ''}', '${book.image_url || ''}')" class="p-1.5 rounded-full text-primary-600 hover:text-primary-800 hover:bg-primary-50 transition-colors" title="Edit book">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="showBookDetails(${book.id})" class="p-1.5 rounded-full text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors" title="View details">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Update pagination controls
+                const paginationControls = document.querySelector('.pagination-controls');
+                if (paginationControls) {
+                    paginationControls.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs font-medium bg-primary-50 text-primary-700 px-2.5 py-1 rounded-full">
+                                ${totalBooks === 0 ? '0-0' : `${startIndex + 1}-${endIndex}`} of ${totalBooks}
+                            </span>
+                            <button id="prev-page" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-secondary-100 transition-all ${currentPage === 1 ? 'opacity-50 cursor-not-allowed text-secondary-400' : 'text-secondary-700'}" ${currentPage === 1 ? 'disabled' : ''}>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span class="font-medium">Page ${currentPage} of ${totalPages || 1}</span>
+                            <button id="next-page" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-secondary-100 transition-all ${currentPage >= totalPages ? 'opacity-50 cursor-not-allowed text-secondary-400' : 'text-secondary-700'}" ${currentPage >= totalPages ? 'disabled' : ''}>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div>
+                            <select id="rows-per-page" class="text-sm border-secondary-200 rounded-lg focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 bg-white shadow-sm">
+                                <option value="5" ${booksPerPage === 5 ? 'selected' : ''}>5 rows</option>
+                                <option value="10" ${booksPerPage === 10 ? 'selected' : ''}>10 rows</option>
+                                <option value="25" ${booksPerPage === 25 ? 'selected' : ''}>25 rows</option>
+                            </select>
+                        </div>
+                    `;
+
+                    // Add event listeners for pagination buttons
+                    document.getElementById('prev-page')?.addEventListener('click', () => {
+                        if (currentPage > 1) {
+                            currentPage--;
+                            const startIndex = (currentPage - 1) * booksPerPage;
+                            const endIndex = Math.min(startIndex + booksPerPage, window.filteredBooks.length);
+                            const currentBooks = window.filteredBooks.slice(startIndex, endIndex);
+                            
+                            // Update table with current page of books
+                            tableBody.innerHTML = currentBooks.map(book => `
+                                <tr class="hover:bg-secondary-50 transition-colors">
+                                    <td class="p-3">
+                                        <input type="checkbox" class="book-checkbox w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500" data-book-id="${book.id}" ${selectedBookIds.has(book.id) ? 'checked' : ''}>
+                                    </td>
+                                    <td class="p-3 whitespace-nowrap">${book.id}</td>
+                                    <td class="p-3 truncate-cell" data-full-text="${book.name}">${book.name}</td>
+                                    <td class="p-3 truncate-cell" data-full-text="${book.author}">${book.author}</td>
+                                    <td class="p-3">${book.shelf_location || "N/A"}</td>
+                                    <td class="p-3 actions-cell">
+                                        <div class="flex space-x-2">
+                                            <button onclick="editBook(${book.id}, '${book.shelf_location || ''}', ${book.copies_available || 0}, '${book.category || ''}', '${book.language || ''}', '${book.tags || ''}', '${book.image_url || ''}')" class="p-1.5 rounded-full text-primary-600 hover:text-primary-800 hover:bg-primary-50 transition-colors" title="Edit book">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="showBookDetails(${book.id})" class="p-1.5 rounded-full text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors" title="View details">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('');
+                            
+                            // Update select all checkbox state
+                            const selectAllCheckbox = document.getElementById('selectAllBooks');
+                            if (selectAllCheckbox) {
+                                selectAllCheckbox.checked = isSelectAllChecked;
+                            }
+                            
+                            // Re-add checkbox event listeners
+                            handleBookCheckbox();
+                            updatePaginationControls();
+                        }
+                    });
+
+                    document.getElementById('next-page')?.addEventListener('click', () => {
+                        if (currentPage < totalPages) {
+                            currentPage++;
+                            const startIndex = (currentPage - 1) * booksPerPage;
+                            const endIndex = Math.min(startIndex + booksPerPage, window.filteredBooks.length);
+                            const currentBooks = window.filteredBooks.slice(startIndex, endIndex);
+                            
+                            // Update table with current page of books
+                            tableBody.innerHTML = currentBooks.map(book => `
+                                <tr class="hover:bg-secondary-50 transition-colors">
+                                    <td class="p-3">
+                                        <input type="checkbox" class="book-checkbox w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500" data-book-id="${book.id}" ${selectedBookIds.has(book.id) ? 'checked' : ''}>
+                                    </td>
+                                    <td class="p-3 whitespace-nowrap">${book.id}</td>
+                                    <td class="p-3 truncate-cell" data-full-text="${book.name}">${book.name}</td>
+                                    <td class="p-3 truncate-cell" data-full-text="${book.author}">${book.author}</td>
+                                    <td class="p-3">${book.shelf_location || "N/A"}</td>
+                                    <td class="p-3 actions-cell">
+                                        <div class="flex space-x-2">
+                                            <button onclick="editBook(${book.id}, '${book.shelf_location || ''}', ${book.copies_available || 0}, '${book.category || ''}', '${book.language || ''}', '${book.tags || ''}', '${book.image_url || ''}')" class="p-1.5 rounded-full text-primary-600 hover:text-primary-800 hover:bg-primary-50 transition-colors" title="Edit book">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="showBookDetails(${book.id})" class="p-1.5 rounded-full text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors" title="View details">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('');
+                            
+                            // Update select all checkbox state
+                            const selectAllCheckbox = document.getElementById('selectAllBooks');
+                            if (selectAllCheckbox) {
+                                selectAllCheckbox.checked = isSelectAllChecked;
+                            }
+                            
+                            // Re-add checkbox event listeners
+                            handleBookCheckbox();
+                            updatePaginationControls();
+                        }
+                    });
+
+                    // Add event listener for rows per page selector
+                    document.getElementById('rows-per-page')?.addEventListener('change', (e) => {
+                        booksPerPage = parseInt(e.target.value);
+                        currentPage = 1; // Reset to first page
+                        searchBooks();
+                    });
+                }
+
+                // Add checkbox event listeners
+                handleBookCheckbox();
+
+            } catch (error) {
+                console.error("Error during search:", error);
+                showModal('Error during search: ' + error.message, 'error');
+            }
+        }
+
+        // Helper function to update pagination controls
+        function updatePaginationControls() {
+            const totalBooks = window.filteredBooks.length;
+            const totalPages = Math.ceil(totalBooks / booksPerPage);
+            const startIndex = (currentPage - 1) * booksPerPage;
+            const endIndex = Math.min(startIndex + booksPerPage, totalBooks);
+
+            const paginationControls = document.querySelector('.pagination-controls');
+            if (paginationControls) {
+                paginationControls.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xs font-medium bg-primary-50 text-primary-700 px-2.5 py-1 rounded-full">
+                            ${totalBooks === 0 ? '0-0' : `${startIndex + 1}-${endIndex}`} of ${totalBooks}
+                        </span>
+                        <button id="prev-page" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-secondary-100 transition-all ${currentPage === 1 ? 'opacity-50 cursor-not-allowed text-secondary-400' : 'text-secondary-700'}" ${currentPage === 1 ? 'disabled' : ''}>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="font-medium">Page ${currentPage} of ${totalPages || 1}</span>
+                        <button id="next-page" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-secondary-100 transition-all ${currentPage >= totalPages ? 'opacity-50 cursor-not-allowed text-secondary-400' : 'text-secondary-700'}" ${currentPage >= totalPages ? 'disabled' : ''}>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div>
+                        <select id="rows-per-page" class="text-sm border-secondary-200 rounded-lg focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 bg-white shadow-sm">
+                            <option value="5" ${booksPerPage === 5 ? 'selected' : ''}>5 rows</option>
+                            <option value="10" ${booksPerPage === 10 ? 'selected' : ''}>10 rows</option>
+                            <option value="25" ${booksPerPage === 25 ? 'selected' : ''}>25 rows</option>
+                        </select>
+                    </div>
+                `;
+
+                // Re-add event listeners
+                document.getElementById('prev-page')?.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        const startIndex = (currentPage - 1) * booksPerPage;
+                        const endIndex = Math.min(startIndex + booksPerPage, window.filteredBooks.length);
+                        const currentBooks = window.filteredBooks.slice(startIndex, endIndex);
+                        
+                        // Update table with current page of books
+                        const tableBody = document.querySelector('.books-table tbody');
+                        tableBody.innerHTML = currentBooks.map(book => `
+                            <tr class="hover:bg-secondary-50 transition-colors">
+                                <td class="p-3">
+                                    <input type="checkbox" class="book-checkbox w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500" data-book-id="${book.id}" ${selectedBookIds.has(book.id) ? 'checked' : ''}>
+                                </td>
+                                <td class="p-3 whitespace-nowrap">${book.id}</td>
+                                <td class="p-3 truncate-cell" data-full-text="${book.name}">${book.name}</td>
+                                <td class="p-3 truncate-cell" data-full-text="${book.author}">${book.author}</td>
+                                <td class="p-3">${book.shelf_location || "N/A"}</td>
+                                <td class="p-3 actions-cell">
+                                    <div class="flex space-x-2">
+                                        <button onclick="editBook(${book.id}, '${book.shelf_location || ''}', ${book.copies_available || 0}, '${book.category || ''}', '${book.language || ''}', '${book.tags || ''}', '${book.image_url || ''}')" class="p-1.5 rounded-full text-primary-600 hover:text-primary-800 hover:bg-primary-50 transition-colors" title="Edit book">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="showBookDetails(${book.id})" class="p-1.5 rounded-full text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors" title="View details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                        
+                        // Update select all checkbox state
+                        const selectAllCheckbox = document.getElementById('selectAllBooks');
+                        if (selectAllCheckbox) {
+                            selectAllCheckbox.checked = isSelectAllChecked;
+                        }
+                        
+                        // Re-add checkbox event listeners
+                        handleBookCheckbox();
+                        updatePaginationControls();
+                    }
+                });
+
+                document.getElementById('next-page')?.addEventListener('click', () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        const startIndex = (currentPage - 1) * booksPerPage;
+                        const endIndex = Math.min(startIndex + booksPerPage, window.filteredBooks.length);
+                        const currentBooks = window.filteredBooks.slice(startIndex, endIndex);
+                        
+                        // Update table with current page of books
+                        const tableBody = document.querySelector('.books-table tbody');
+                        tableBody.innerHTML = currentBooks.map(book => `
+                            <tr class="hover:bg-secondary-50 transition-colors">
+                                <td class="p-3">
+                                    <input type="checkbox" class="book-checkbox w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500" data-book-id="${book.id}" ${selectedBookIds.has(book.id) ? 'checked' : ''}>
+                                </td>
+                                <td class="p-3 whitespace-nowrap">${book.id}</td>
+                                <td class="p-3 truncate-cell" data-full-text="${book.name}">${book.name}</td>
+                                <td class="p-3 truncate-cell" data-full-text="${book.author}">${book.author}</td>
+                                <td class="p-3">${book.shelf_location || "N/A"}</td>
+                                <td class="p-3 actions-cell">
+                                    <div class="flex space-x-2">
+                                        <button onclick="editBook(${book.id}, '${book.shelf_location || ''}', ${book.copies_available || 0}, '${book.category || ''}', '${book.language || ''}', '${book.tags || ''}', '${book.image_url || ''}')" class="p-1.5 rounded-full text-primary-600 hover:text-primary-800 hover:bg-primary-50 transition-colors" title="Edit book">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="showBookDetails(${book.id})" class="p-1.5 rounded-full text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors" title="View details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                        
+                        // Update select all checkbox state
+                        const selectAllCheckbox = document.getElementById('selectAllBooks');
+                        if (selectAllCheckbox) {
+                            selectAllCheckbox.checked = isSelectAllChecked;
+                        }
+                        
+                        // Re-add checkbox event listeners
+                        handleBookCheckbox();
+                        updatePaginationControls();
+                    }
+                });
+
+                document.getElementById('rows-per-page')?.addEventListener('change', (e) => {
+                    booksPerPage = parseInt(e.target.value);
+                    currentPage = 1;
+                    searchBooks();
+                });
+            }
+        }
+
+        // Function to sort table
+        function sortTable(column, direction) {
+            const tbody = document.querySelector('.books-table tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Remove sort classes from all headers
+            document.querySelectorAll('.sortable').forEach(header => {
+                header.classList.remove('asc', 'desc');
+            });
+            
+            // Add sort class to current header
+            const header = document.querySelector(`[data-sort="${column}"]`);
+            header.classList.add(direction);
+            
+            // Sort the rows
+            rows.sort((a, b) => {
+                let aValue = a.querySelector(`td:nth-child(${getColumnIndex(column)})`).textContent;
+                let bValue = b.querySelector(`td:nth-child(${getColumnIndex(column)})`).textContent;
+                
+                // Handle numeric values
+                if (['id', 'publication_year', 'copies_available', 'number_of_page'].includes(column)) {
+                    aValue = parseFloat(aValue) || 0;
+                    bValue = parseFloat(bValue) || 0;
+                }
+                
+                // Handle null/empty values
+                if (aValue === 'N/A' || aValue === '') aValue = direction === 'asc' ? 'zzz' : '';
+                if (bValue === 'N/A' || bValue === '') bValue = direction === 'asc' ? 'zzz' : '';
+                
+                // Compare values
+                if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+                if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Reorder the rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Helper function to get column index
+        function getColumnIndex(column) {
+            const headers = document.querySelectorAll('.books-table th');
+            for (let i = 0; i < headers.length; i++) {
+                if (headers[i].dataset.sort === column) {
+                    return i + 1;
+                }
+            }
+            return 1;
+        }
+
+        // Function to export books to Excel
+        async function exportBooksToExcel() {
+            try {
+                const result = await window.electronAPI.getBooks();
+                if (!result.success || !result.books || result.books.length === 0) {
+                    showModal('No book data to export.', 'error');
+                    return;
+                }
+
+                showModal('Preparing Excel file with QR codes...', 'info');
+
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('Books');
+
+                worksheet.columns = [
+                    { header: 'Book Name', key: 'name', width: 30 },
+                    { header: 'QR Code', key: 'qr', width: 15 }
+                ];
+
+                worksheet.properties.defaultRowHeight = 80;
+
+                for (const book of result.books) {
+                    const row = worksheet.addRow({
+                        name: book.name
+                    });
+
+                    if (book.qr_code) {
+                        try {
+                            const imageId = workbook.addImage({
+                                base64: book.qr_code,
+                                extension: 'png',
+                            });
+
+                            worksheet.addImage(imageId, {
+                                tl: { col: 1, row: row.number - 1 },
+                                ext: { width: 100, height: 100 }
+                            });
+                        } catch (imgError) {
+                            console.warn('Failed to add QR code for book:', book.name, imgError);
+                        }
+                    }
+                }
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'book_qr_codes.xlsx';
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                showModal('Excel file with QR codes generated successfully!', 'success');
+            } catch (error) {
+                console.error('Error generating Excel file:', error);
+                showModal('Error generating Excel file: ' + error.message, 'error');
+            }
+        }
+
+        // Function to show book details
+        async function showBookDetails(bookId) {
+            try {
+                const result = await window.electronAPI.getBooks();
+                if (result.success) {
+                    const book = result.books.find(b => b.id === bookId);
+                    if (book) {
+                        const detailsContent = document.getElementById('bookDetailsContent');
+                        detailsContent.innerHTML = `
+                            <div class="col-span-1 md:col-span-2 border-b border-secondary-200 pb-4 mb-4">
+                                <h3 class="text-xl md:text-2xl font-bold text-secondary-900 break-words">${book.name}</h3>
+                                <p class="text-primary-600 font-medium break-words">${book.author}</p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-xs text-secondary-500 uppercase font-semibold mb-1">Book ID</p>
+                                        <p class="font-medium break-words">${book.id}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-secondary-500 uppercase font-semibold mb-1">ISBN</p>
+                                        <p class="font-medium break-words">${book.ISBN || "N/A"}</p>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <p class="text-xs text-secondary-500 uppercase font-semibold mb-1">Publication Year</p>
+                                    <p class="font-medium">${book.publication_year || "N/A"}</p>
+                                </div>
+                                
+                                <div>
+                                    <p class="text-xs text-secondary-500 uppercase font-semibold mb-1">Category</p>
+                                    <p class="font-medium break-words">${book.category || "N/A"}</p>
+                                </div>
+                                
+                                <div>
+                                    <p class="text-xs text-secondary-500 uppercase font-semibold mb-1">Language</p>
+                                    <p class="font-medium break-words">${book.language || "N/A"}</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-xs text-secondary-500 uppercase font-semibold mb-1">Shelf Location</p>
+                                        <p class="font-medium break-words">${book.shelf_location || "N/A"}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-secondary-500 uppercase font-semibold mb-1">Copies Available</p>
+                                        <p class="font-medium">${book.copies_available || 0}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-xs text-secondary-500 uppercase font-semibold mb-1">Number of Pages</p>
+                                        <p class="font-medium">${book.number_of_page || "N/A"}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-secondary-500 uppercase font-semibold mb-1">Tags</p>
+                                        <p class="font-medium break-words">${book.tags || "N/A"}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-xs text-secondary-500 uppercase font-semibold mb-2">Book Cover</p>
+                                    <div class="border border-secondary-200 rounded-lg p-2 bg-secondary-50 flex items-center justify-center h-48 md:h-64">
+                                        ${book.image_url 
+                                            ? `<img src="${book.image_url}" alt="Book Cover" class="max-w-full max-h-full object-contain rounded">` 
+                                            : `<div class="text-center text-secondary-400">
+                                                <i class="fas fa-book text-4xl md:text-5xl mb-3"></i>
+                                                <p>No Image Available</p>
+                                              </div>`
+                                        }
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <p class="text-xs text-secondary-500 uppercase font-semibold mb-2">QR Code</p>
+                                    <div class="border border-secondary-200 rounded-lg p-2 bg-secondary-50 flex items-center justify-center h-48 md:h-64">
+                                        ${book.qr_code 
+                                            ? `<img src="${book.qr_code}" alt="QR Code" class="max-w-full max-h-full object-contain w-40 h-40 md:w-56 md:h-56">` 
+                                            : `<div class="text-center text-secondary-400">
+                                                <i class="fas fa-qrcode text-4xl md:text-5xl mb-3"></i>
+                                                <p>No QR Code Available</p>
+                                              </div>`
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('bookDetailsModal').style.display = 'flex';
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching book details:", error);
+                showModal('Error fetching book details', 'error');
+            }
+        }
+
+        // Function to show modal messages
+        function showModal(message, type = 'info') {
+            const modal = document.getElementById('messageModal');
+            const modalContent = modal.querySelector('.modal-content');
+            const modalMessage = document.getElementById('modalMessage');
+            const iconElement = modalContent.querySelector('i');
+            
+            // Remove existing types and add new one
+            modalContent.classList.remove('success', 'error', 'info', 'warning');
+            modalContent.classList.add(type);
+            
+            // Update icon based on type
+            iconElement.className = ''; // Clear existing classes
+            
+            switch(type) {
+                case 'success':
+                    iconElement.className = 'fas fa-check-circle text-green-500 text-4xl mb-4';
+                    break;
+                case 'error':
+                    iconElement.className = 'fas fa-times-circle text-red-500 text-4xl mb-4';
+                    break;
+                case 'info':
+                    iconElement.className = 'fas fa-info-circle text-blue-500 text-4xl mb-4';
+                    break;
+                case 'warning':
+                    iconElement.className = 'fas fa-exclamation-triangle text-amber-500 text-4xl mb-4';
+                    break;
+                default:
+                    iconElement.className = 'fas fa-info-circle text-blue-500 text-4xl mb-4';
+            }
+            
+            modalMessage.textContent = message;
+            modal.style.display = 'flex';
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 3000);
+        }
+
+        // Function to validate year input
+        function validateYear(input) {
+            if (input.value.length > 4) {
+                input.value = input.value.slice(0, 4);
+            }
+        }
+
+       
+        function logout() {
+            // Clear any stored user data
+            localStorage.removeItem('userData');
+            // Redirect to login page
+            window.location.href = 'login.html';
+        }
+
+        // Event listeners
+        document.getElementById('openDeleteBookModal-btn').onclick = function() {
+            document.getElementById('deleteBookId').value = '';
+            document.getElementById('deleteBookModal').style.display = 'flex';
+        }
+
+        document.getElementById('closeDeleteBookModal').onclick = function() {
+            document.getElementById('deleteBookModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const bookModal = document.getElementById('deleteBookModal');
+            const messageModal = document.getElementById('messageModal');
+            const addBookModal = document.getElementById('addBookModal');
+            const editBookModal = document.getElementById('editBookModal');
+            const bookDetailsModal = document.getElementById('bookDetailsModal');
+            
+            if (event.target === bookModal) {
+                bookModal.style.display = 'none';
+            }
+            if (event.target === messageModal) {
+                messageModal.style.display = 'none';
+            }
+            if (event.target === addBookModal) {
+                closeBookModal();
+            }
+            if (event.target === editBookModal) {
+                closeEditBookModal();
+            }
+            if (event.target === bookDetailsModal) {
+                closeBookDetailsModal();
+            }
+        }
+
+        // Function to close book details modal
+        function closeBookDetailsModal() {
+            document.getElementById('bookDetailsModal').style.display = 'none';
+        }
+
+        // Add this function for importing books from Excel
+        async function handleBooksExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                showModal('Reading Excel file...', 'info');
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(await file.arrayBuffer());
+                const worksheet = workbook.getWorksheet(1);
+                if (!worksheet) {
+                    showModal('No data found in the Excel file.', 'error');
+                    return;
+                }
+                const books = [];
+                let errors = [];
+
+                // Helper to extract plain text from ExcelJS cell value
+                function extractText(cellValue) {
+                    if (!cellValue) return '';
+                    if (typeof cellValue === 'string') return cellValue.trim();
+                    if (typeof cellValue === 'number') return cellValue.toString();
+                    if (cellValue.richText && Array.isArray(cellValue.richText)) {
+                        return cellValue.richText.map(rt => rt.text).join('').trim();
+                    }
+                    if (cellValue.text) return cellValue.text.trim();
+                    return '';
+                }
+
+                worksheet.eachRow((row, rowNum) => {
+                    if (rowNum === 1) return; // Skip header row
+                    
+                    const name = extractText(row.getCell(1).value);
+                    const author = extractText(row.getCell(2).value);
+                    const isbn = extractText(row.getCell(3).value);
+                    const publicationYear = extractText(row.getCell(4).value);
+                    const category = extractText(row.getCell(5).value);
+                    const language = extractText(row.getCell(6).value);
+                    const shelfLocation = extractText(row.getCell(7).value);
+                    const copiesAvailable = extractText(row.getCell(8).value);
+                    const numberOfPages = extractText(row.getCell(9).value);
+                    const tags = extractText(row.getCell(10).value);
+
+                    // Debug log for Book Name and Author
+                    console.log(`Row ${rowNum}: Book Name = [${name}], Author = [${author}]`);
+
+                    // Skip completely empty rows
+                    if (!name && !author) {
+                        return;
+                    }
+                    // If one is filled and the other is missing, show error
+                    if (!name || !author) {
+                        errors.push(`Row ${rowNum}: Missing required fields (Book Name or Author)`);
+                        return;
+                    }
+                    books.push({
+                        isbn: isbn || null,
+                        name: name,
+                        author: author,
+                        publicationYear: publicationYear ? parseInt(publicationYear) : null,
+                        category: category || null,
+                        language: language || null,
+                        shelfLocation: shelfLocation || null,
+                        copiesAvailable: copiesAvailable ? parseInt(copiesAvailable) : null,
+                        numberOfPages: numberOfPages ? parseInt(numberOfPages) : null,
+                        tags: tags || null
+                    });
+                });
+
+                if (errors.length > 0) {
+                    showModal(`Found ${errors.length} errors in the Excel file:\n${errors.join('\n')}`, 'error');
+                    return;
+                }
+                if (books.length === 0) {
+                    showModal('No valid book data found in the Excel file.', 'warning');
+                    return;
+                }
+
+            
+                const result = await window.electronAPI.addBooks(books);
+                    if (result.success) {
+                        showModal(`${books.length} books imported successfully!`, 'success');
+                        fetchBooks();
+                    } else {
+                        showModal(result.error || 'Failed to import books', 'error');
+                    }
+
+                
+            } catch (error) {
+                console.error('Error reading Excel file:', error);
+                showModal('Error reading Excel file: ' + error.message, 'error');
+            }
+            event.target.value = '';
+        }
+
+        // Initialize the page
+        window.onload = function() {
+            fetchBooks();
+        };
+
+        function previewEditImage(input) {
+            const preview = document.getElementById('editImagePreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 200px;">`;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Add this function in the script section, before the window.onload function
+        async function downloadImportTemplate() {
+            try {
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('Books Template');
+
+                // Define the columns
+                worksheet.columns = [
+                    { header: 'Book Name*', key: 'name', width: 30 },
+                    { header: 'Author*', key: 'author', width: 25 },
+                    { header: 'ISBN', key: 'isbn', width: 15 },
+                    { header: 'Publication Year', key: 'publicationYear', width: 15 },
+                    { header: 'Category', key: 'category', width: 20 },
+                    { header: 'Language', key: 'language', width: 15 },
+                    { header: 'Shelf Location', key: 'shelfLocation', width: 20 },
+                    { header: 'Copies Available', key: 'copiesAvailable', width: 15 },
+                    { header: 'Number of Pages', key: 'numberOfPages', width: 15 },
+                    { header: 'Tags', key: 'tags', width: 30 }
+                ];
+
+                // Style the header row
+                worksheet.getRow(1).font = { bold: true };
+                worksheet.getRow(1).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFE0F2FE' }
+                };
+
+                // Add a sample row
+                worksheet.addRow({
+                    name: 'Sample Book Name',
+                    author: 'Sample Author',
+                    isbn: '978-3-16-148410-0',
+                    publicationYear: '2024',
+                    category: 'Fiction',
+                    language: 'English',
+                    shelfLocation: 'A1-B2',
+                    copiesAvailable: '5',
+                    numberOfPages: '300',
+                    tags: 'Fiction, Mystery, Adventure'
+                });
+
+                // Add instructions
+                worksheet.addRow([]);
+                worksheet.addRow(['Instructions:']);
+                worksheet.addRow(['1. Required fields are marked with * (Book Name and Author)']);
+                worksheet.addRow(['2. Publication Year should be a 4-digit year (e.g., 2024)']);
+                worksheet.addRow(['3. Copies Available and Number of Pages should be numbers']);
+                worksheet.addRow(['4. Tags should be comma-separated values']);
+                worksheet.addRow(['5. IMPORTANT: DELETE THIS (INSTRUCTION) IF YOU ARE USING THIS TEMPLATE']);
+
+                // Style the instructions
+                for (let i = 2; i <= 7; i++) {
+                    worksheet.getRow(i).font = { italic: true };
+                    worksheet.getRow(i).fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFF8FAFC' }
+                    };
+                }
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'book_import_template.xlsx';
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                showModal('Template downloaded successfully!', 'success');
+            } catch (error) {
+                console.error('Error generating template:', error);
+                showModal('Error generating template: ' + error.message, 'error');
+            }
+        }
+
+        // Add these new functions after the existing script
+        // Function to handle select all checkbox
+        document.getElementById('selectAllBooks')?.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.book-checkbox');
+            isSelectAllChecked = this.checked;
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isSelectAllChecked;
+                if (isSelectAllChecked) {
+                    selectedBookIds.add(checkbox.dataset.bookId);
+                } else {
+                    selectedBookIds.delete(checkbox.dataset.bookId);
+                }
+            });
+            updateDeleteSelectedButton();
+        });
+
+        // Function to handle individual checkboxes
+        function handleBookCheckbox() {
+            const checkboxes = document.querySelectorAll('.book-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectedBookIds.has(checkbox.dataset.bookId);
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        selectedBookIds.add(this.dataset.bookId);
+                    } else {
+                        selectedBookIds.delete(this.dataset.bookId);
+                    }
+                    updateDeleteSelectedButton();
+                });
+            });
+        }
+
+        // Function to update delete selected button visibility
+        function updateDeleteSelectedButton() {
+            const checkedBoxes = document.querySelectorAll('.book-checkbox:checked');
+            const deleteSelectedBtn = document.getElementById('deleteSelectedBooks-btn');
+            if (checkedBoxes.length > 0) {
+                deleteSelectedBtn.classList.remove('hidden');
+            } else {
+                deleteSelectedBtn.classList.add('hidden');
+            }
+        }
+
+        // Function to delete selected books
+        async function deleteSelectedBooks() {
+            const checkedBoxes = document.querySelectorAll('.book-checkbox:checked');
+            const bookIds = Array.from(checkedBoxes).map(checkbox => checkbox.dataset.bookId);
+
+            if (bookIds.length === 0) {
+                showModal('Please select at least one book to delete.', 'warning');
+                return;
+            }
+
+            try {
+                console.log('Sending delete request for book IDs:', bookIds);
+                const response = await fetch('http://localhost:5000/api/delete-books', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ bookIds: bookIds })
+                });
+
+                console.log('Response status:', response.status);
+                const contentType = response.headers.get('content-type');
+                console.log('Response content type:', contentType);
+
+                let result;
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    console.log('Non-JSON response:', text);
+                    throw new Error('Server returned non-JSON response');
+                }
+                
+                if (response.ok) {
+                    showModal(`${bookIds.length} book(s) deleted successfully!`, 'success');
+                    // Reset select all checkbox
+                    const selectAllCheckbox = document.getElementById('selectAllBooks');
+                    if (selectAllCheckbox) {
+                        selectAllCheckbox.checked = false;
+                    }
+                    // Hide delete selected button
+                    const deleteSelectedBtn = document.getElementById('deleteSelectedBooks-btn');
+                    if (deleteSelectedBtn) {
+                        deleteSelectedBtn.classList.add('hidden');
+                    }
+                    // Refresh the books list
+                    await fetchBooks();
+                } else {
+                    showModal(result.error || 'Failed to delete books', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting books:', error);
+                showModal('Error deleting books: ' + error.message, 'error');
+            }
+        }
+
+        // Add event listener for delete selected button
+        document.getElementById('deleteSelectedBooks-btn')?.addEventListener('click', deleteSelectedBooks);
+
+        // Modify the fetchBooks function to add checkbox event listeners
+        const originalFetchBooks = fetchBooks;
+        fetchBooks = async function() {
+            await originalFetchBooks();
+            handleBookCheckbox();
+        };
+    </script>
+</body>
+</html> 

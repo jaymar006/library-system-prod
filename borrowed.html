@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan QR Codes - Borrow Books</title>
+    <link href="./dist/output.css" rel="stylesheet">
+    <script src="./node_modules/flowbite/dist/flowbite.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="assets/libs/html5-qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #64748b;
+        }
+        
+        #qr-reader__dashboard_section_swaplink {
+            color: #0284c7 !important;
+            text-decoration: none !important;
+        }
+        
+        #qr-reader__dashboard_section_csr button {
+            background-color: #0284c7 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 0.375rem !important;
+            padding: 0.5rem 1rem !important;
+        }
+        
+        /* Center QR code scanner icon */
+        #qr-reader img {
+            display: block !important;
+            margin: 0 auto !important;
+            text-align: center !important;
+        }
+        
+        /* Center the camera selection dropdown */
+        #qr-reader select {
+            margin: 0 auto !important;
+            display: block !important;
+            text-align: center !important;
+        }
+        
+        /* Center the file scan link */
+        #qr-reader__dashboard_section_fsr {
+            text-align: center !important;
+        }
+        
+        /* Center the entire interface */
+        #qr-reader__dashboard_section {
+            text-align: center !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="fixed top-0 right-0 z-50 flex gap-2 select-none p-2">
+        <button onclick="window.electronAPI.minimize()" title="Minimize" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-blue-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 18"/></svg>
+        </button>
+        <button onclick="window.electronAPI.maximize()" title="Maximize/Restore" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-green-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" stroke-width="2"/></svg>
+        </button>
+        <button onclick="window.electronAPI.close()" title="Close" class="w-8 h-8 flex items-center justify-center rounded hover:bg-red-100 active:bg-red-200 text-gray-600 hover:text-red-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 6l12 12M6 18L18 6"/></svg>
+        </button>
+    </div>
+    <div class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-300">
+                    <button onclick="window.location.href='admindashboard.html'" class="flex items-center justify-center w-10 h-10 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all mr-4">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <img src="assets/pic/removebgroyal.png" alt="Logo" class="h-10 w-10 rounded-full">
+                    <h1 class="text-xl font-semibold text-gray-800">Library Management System - Borrow Book</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 mb-6">
+            <h2 id="scan-title" class="text-2xl font-bold text-center text-gray-800 mb-6 flex items-center justify-center">
+                <i class="fas fa-qrcode mr-3 text-primary-600"></i>
+                Scan Student QR Code
+            </h2>
+            
+            <div id="qr-reader" class="w-full max-w-md mx-auto mb-6"></div>
+            
+            <!-- Manual Entry Buttons - Aligned in the same row -->
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <!-- Manual Student Entry -->
+                <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-visible">
+                    <button class="w-full py-3 px-4 bg-gray-50 text-gray-700 font-medium flex items-center justify-center transition-colors focus:outline-none" onclick="toggleManualEntry('student')">
+                        <i class="fas fa-keyboard mr-2 text-gray-600"></i>
+                        <span>Manual Student Entry</span>
+                    </button>
+                    <div id="student-manual-form" class="mt-4 p-4 space-y-4 hidden bg-white border-t border-gray-200">
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <div class="flex-1 relative">
+                                <input type="text" id="student-search" placeholder="Enter Student ID or Username" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <div id="student-suggestions" class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto"></div>
+                            </div>
+                            <button onclick="searchStudent()" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 flex items-center">
+                                <i class="fas fa-search mr-2"></i>
+                                Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Manual Book Entry -->
+                <div class="bg-gray-50 rounded-lg border border-gray-200 overflow-visible">
+                    <button class="w-full py-3 px-4 bg-gray-50 text-gray-700 font-medium flex items-center justify-center transition-colors focus:outline-none" onclick="toggleManualEntry('book')">
+                        <i class="fas fa-keyboard mr-2 text-gray-600"></i>
+                        <span>Manual Book Entry</span>
+                    </button>
+                    <div id="book-manual-form" class="mt-4 p-4 space-y-4 hidden bg-white border-t border-gray-200">
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <div class="flex-1 relative">
+                                <input type="text" id="book-search" placeholder="Enter Book ID or Title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <div id="book-suggestions" class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto"></div>
+                            </div>
+                            <button onclick="searchBook()" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 flex items-center">
+                                <i class="fas fa-search mr-2"></i>
+                                Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6 mt-8">
+                <div id="student-info" class="bg-gray-50 rounded-lg p-4 border border-gray-200 hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-user-graduate text-primary-600 mr-2"></i>
+                        Student Information
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <p class="flex items-center"><span class="font-medium w-24">ID:</span><span id="student-id" class="text-gray-700"></span></p>
+                        <p class="flex items-center"><span class="font-medium w-24">Name:</span><span id="student-name" class="text-gray-700"></span></p>
+                        <p class="flex items-center"><span class="font-medium w-24">Username:</span><span id="student-username" class="text-gray-700"></span></p>
+                    </div>
+                </div>
+                
+                <div id="book-info" class="bg-gray-50 rounded-lg p-4 border border-gray-200 hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-book text-primary-600 mr-2"></i>
+                        Book Information
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <p class="flex items-center"><span class="font-medium w-24">ID:</span><span id="book-id" class="text-gray-700"></span></p>
+                        <p class="flex items-center"><span class="font-medium w-24">Title:</span><span id="book-title" class="text-gray-700"></span></p>
+                        <p class="flex items-center"><span class="font-medium w-24">Author:</span><span id="book-author" class="text-gray-700"></span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="status" class="mt-6 px-4 py-3 rounded-lg text-center hidden"></div>
+            
+            <div class="mt-6 flex justify-center">
+                <button id="confirm-btn" class="hidden px-5 py-3 bg-green-600 text-white font-medium rounded-lg shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition flex items-center" onclick="confirmBorrowing()">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Confirm Borrowing
+                </button>
+            </div>
+            
+            <!-- Reset Button -->
+            <div class="mt-4 flex justify-center">
+                <button onclick="resetScanner()" class="text-gray-500 hover:text-gray-700 underline text-sm transition-colors">
+                    Reset Scanner
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let html5QrcodeScanner = null;
+        let studentData = null;
+        let bookData = null;
+        let scanningStudent = true;
+
+        // Add these new functions for dropdown functionality
+        let studentSearchTimeout;
+        let bookSearchTimeout;
+
+        function onScanSuccess(decodedText) {
+            try {
+                const data = JSON.parse(decodedText);
+                
+                if (scanningStudent) {
+                    // Handle both full student data and just ID
+                    const studentId = data.id || data; // If data is just an ID, use it directly
+                    
+                    // Get student details from the database
+                    fetch('http://localhost:5000/api/get-student', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ id: studentId })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to get student details');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || 'Failed to get student details');
+                        }
+                        studentData = data.student;
+                        displayStudentInfo(data.student);
+                        switchToBookScanning();
+                    })
+                    .catch(error => {
+                        showStatus("Error fetching student details: " + error.message, "error");
+                    });
+                } else {
+                    // Handle both full book data and just ID
+                    const bookId = data.id || data; // If data is just an ID, use it directly
+                    
+                    // Get book details from the database
+                    fetch('http://localhost:5000/api/get-book', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ id: bookId })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to get book details');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || 'Failed to get book details');
+                        }
+                        bookData = data.book;
+                        displayBookInfo(data.book);
+                        completeScan();
+                    })
+                    .catch(error => {
+                        showStatus("Error fetching book details: " + error.message, "error");
+                    });
+                }
+            } catch (error) {
+                showStatus("Invalid QR code format", "error");
+            }
+        }
+
+        function displayStudentInfo(data) {
+            document.getElementById('student-info').classList.remove('hidden');
+            document.getElementById('student-id').textContent = data.id;
+            document.getElementById('student-name').textContent = data.name;
+            document.getElementById('student-username').textContent = data.username;
+        }
+
+        function displayBookInfo(data) {
+            document.getElementById('book-info').classList.remove('hidden');
+            document.getElementById('book-id').textContent = data.id;
+            document.getElementById('book-title').textContent = data.name;
+            document.getElementById('book-author').textContent = data.author;
+        }
+
+        function switchToBookScanning() {
+            scanningStudent = false;
+            document.getElementById('scan-title').innerHTML = '<i class="fas fa-qrcode mr-3 text-primary-600"></i> Scan Book QR Code';
+            showStatus("Now scan the book's QR code", "waiting");
+        }
+
+        function completeScan() {
+            html5QrcodeScanner.clear();
+            document.getElementById('confirm-btn').classList.remove('hidden');
+            showStatus("Ready to confirm borrowing", "success");
+        }
+
+        async function confirmBorrowing() {
+            try {
+                const studentId = studentData.id;
+                const bookId = bookData.id;
+                
+                // Record the borrowing
+                const response = await fetch('http://localhost:5000/api/borrow-book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        studentId: studentId,
+                        bookId: bookId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus("Successfully recorded borrowing!", "success");
+                    setTimeout(() => {
+                        resetScanner();
+                    }, 2000);
+                } else {
+                    showStatus(result.message || "Error: " + result.error, "error");
+                }
+            } catch (error) {
+                showStatus("Error recording borrowing: " + error.message, "error");
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-yellow-100', 'text-yellow-800');
+            
+            if (type === "success") {
+                statusDiv.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === "error") {
+                statusDiv.classList.add('bg-red-100', 'text-red-800');
+            } else if (type === "waiting") {
+                statusDiv.classList.add('bg-yellow-100', 'text-yellow-800');
+            }
+        }
+
+        function resetScanner() {
+            studentData = null;
+            bookData = null;
+            scanningStudent = true;
+            document.getElementById('student-info').classList.add('hidden');
+            document.getElementById('book-info').classList.add('hidden');
+            document.getElementById('confirm-btn').classList.add('hidden');
+            document.getElementById('scan-title').innerHTML = '<i class="fas fa-qrcode mr-3 text-primary-600"></i> Scan Student QR Code';
+            document.getElementById('status').classList.add('hidden');
+            document.getElementById('student-search').value = '';
+            document.getElementById('book-search').value = '';
+            initializeScanner();
+        }
+
+        function initializeScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "qr-reader", 
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                }
+            );
+            
+            html5QrcodeScanner.render(onScanSuccess);
+        }
+
+        function toggleManualEntry(type) {
+            const form = document.getElementById(`${type}-manual-form`);
+            form.classList.toggle('hidden');
+        }
+
+        async function searchStudent() {
+            const searchInput = document.getElementById('student-search').value;
+            if (!searchInput) {
+                showStatus("Please enter a student ID or username", "error");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/students/search?query=${encodeURIComponent(searchInput)}`);
+                const data = await response.json();
+
+                if (data.success && data.students && data.students.length > 0) {
+                    studentData = data.students[0];
+                    displayStudentInfo(data.students[0]);
+                    switchToBookScanning();
+                    showStatus("Student found successfully", "success");
+                } else {
+                    showStatus("Student not found", "error");
+                }
+            } catch (error) {
+                showStatus("Error searching for student", "error");
+            }
+        }
+
+        async function searchBook() {
+            const searchInput = document.getElementById('book-search').value;
+            if (!searchInput) {
+                showStatus("Please enter a book ID or title", "error");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/available-books?query=${encodeURIComponent(searchInput)}`);
+                const data = await response.json();
+
+                if (data.success && data.books && data.books.length > 0) {
+                    bookData = data.books[0];
+                    displayBookInfo(data.books[0]);
+                    completeScan();
+                    showStatus("Book found successfully", "success");
+                } else {
+                    showStatus("Book not found", "error");
+                }
+            } catch (error) {
+                showStatus("Error searching for book", "error");
+            }
+        }
+
+        // Add event listeners for search inputs
+        document.getElementById('student-search').addEventListener('input', function(e) {
+            clearTimeout(studentSearchTimeout);
+            const query = e.target.value.trim();
+            
+            if (query.length < 1) {
+                document.getElementById('student-suggestions').classList.add('hidden');
+                return;
+            }
+
+            studentSearchTimeout = setTimeout(() => {
+                fetch(`http://localhost:5000/api/students/search?query=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const suggestionsDiv = document.getElementById('student-suggestions');
+                        suggestionsDiv.innerHTML = '';
+                        
+                        if (data.success && data.students && data.students.length > 0) {
+                            data.students.forEach(student => {
+                                const div = document.createElement('div');
+                                div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                                div.innerHTML = `
+                                    <div class="font-medium">${student.name}</div>
+                                    <div class="text-sm text-gray-600">ID: ${student.id} | Username: ${student.username}</div>
+                                `;
+                                div.onclick = () => {
+                                    document.getElementById('student-search').value = student.name;
+                                    suggestionsDiv.classList.add('hidden');
+                                    studentData = student;
+                                    displayStudentInfo(student);
+                                    switchToBookScanning();
+                                    showStatus("Student found successfully", "success");
+                                };
+                                suggestionsDiv.appendChild(div);
+                            });
+                            suggestionsDiv.classList.remove('hidden');
+                        } else {
+                            suggestionsDiv.classList.add('hidden');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching student suggestions:', error);
+                    });
+            }, 300);
+        });
+
+        document.getElementById('book-search').addEventListener('input', function(e) {
+            clearTimeout(bookSearchTimeout);
+            const query = e.target.value.trim();
+            const suggestionsDiv = document.getElementById('book-suggestions');
+            if (!studentData || query.length < 1) {
+                suggestionsDiv.classList.add('hidden');
+                return;
+            }
+            bookSearchTimeout = setTimeout(() => {
+                fetch(`http://localhost:5000/api/available-books?query=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestionsDiv.innerHTML = '';
+                        if (data.success && data.books && data.books.length > 0) {
+                            data.books.forEach(book => {
+                                const div = document.createElement('div');
+                                div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                                div.innerHTML = `
+                                    <div class="font-medium">${book.name}</div>
+                                    <div class="text-sm text-gray-600">ID: ${book.id} | Author: ${book.author}</div>
+                                `;
+                                div.onclick = () => {
+                                    document.getElementById('book-search').value = book.name;
+                                    suggestionsDiv.classList.add('hidden');
+                                    bookData = book;
+                                    displayBookInfo(book);
+                                    completeScan();
+                                    showStatus("Book found successfully", "success");
+                                };
+                                suggestionsDiv.appendChild(div);
+                            });
+                            suggestionsDiv.classList.remove('hidden');
+                        } else {
+                            suggestionsDiv.classList.add('hidden');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching book suggestions:', error);
+                        suggestionsDiv.classList.add('hidden');
+                    });
+            }, 300);
+        });
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#student-search')) {
+                document.getElementById('student-suggestions').classList.add('hidden');
+            }
+            if (!e.target.closest('#book-search')) {
+                document.getElementById('book-suggestions').classList.add('hidden');
+            }
+        });
+
+        // Initialize scanner when page loads
+        window.onload = initializeScanner;
+
+        // Logout function
+        function logout() {
+            // Clear any stored user data
+            localStorage.removeItem('userData');
+            // Redirect to login page
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html> 

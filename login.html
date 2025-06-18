@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Royal Heirs Academy - Login</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #3f51b5;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header a {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .header a:hover {
+            opacity: 0.9;
+        }
+
+        .header img {
+            border-radius: 50%;
+            margin-right: 15px;
+            padding: 2px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 76px);
+        }
+
+        .left-panel, .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .left-panel {
+            background-color: white;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+        
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 60px;
+            background: linear-gradient(to left, rgba(255,255,255,1), rgba(255,255,255,0));
+            z-index: 1;
+        }
+
+        .right-panel {
+            background-color: #f8f9fa;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .right-panel::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background-color: rgba(63, 81, 181, 0.05);
+            top: -100px;
+            right: -100px;
+            z-index: 0;
+        }
+        
+        .right-panel::after {
+            content: '';
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background-color: rgba(63, 81, 181, 0.07);
+            bottom: -50px;
+            left: -50px;
+            z-index: 0;
+        }
+
+        .right-panel h2 {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .right-panel img {
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            position: relative;
+            z-index: 1;
+        }
+
+        .right-panel img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+        }
+
+        .login-form-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+            background-color: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        
+        .login-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .form-group .input-icon-left {
+            position: absolute;
+            left: 15px;
+            top: 38px;
+            color: #999;
+        }
+        
+        .form-group .input-icon-right {
+            position: absolute;
+            right: 15px;
+            top: 38px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .login-form input[type="password"] {
+            padding-right: 45px; /* Add space for the eye icon */
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: #3f51b5;
+            box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.2);
+        }
+
+        .login-form button {
+            padding: 12px;
+            border-radius: 12px;
+            background-color: #3f51b5;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .login-form button:hover {
+            background-color: #303f9f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(63, 81, 181, 0.3);
+        }
+        
+        .login-form button:active {
+            transform: translateY(0);
+        }
+
+        #errorMessage {
+            color: #e53935;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .forgot-password a {
+            color: #3f51b5;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: #303f9f;
+            text-decoration: underline;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .container {
+                flex-direction: column-reverse;
+                height: auto;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
+                padding: 2rem 1rem;
+            }
+            
+            .left-panel::before {
+                display: none;
+            }
+            
+            .right-panel {
+                padding-bottom: 3rem;
+                min-height: 350px;
+            }
+            
+            .right-panel h2 {
+                font-size: 2rem;
+            }
+            
+            .right-panel img {
+                width: 150px;
+                height: 150px;
+                margin-top: 0;
+            }
+        }
+
+        .window-controls {
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 50;
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            user-select: none;
+        }
+
+        .window-controls button {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .window-controls button:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .window-controls button:active {
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .window-controls button.close:hover {
+            background-color: rgba(220, 38, 38, 0.1);
+        }
+
+        .window-controls button.close:active {
+            background-color: rgba(220, 38, 38, 0.2);
+        }
+
+        .window-controls button svg {
+            width: 1rem;
+            height: 1rem;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        .window-controls button.minimize:hover {
+            color: #3b82f6;
+        }
+
+        .window-controls button.maximize:hover {
+            color: #22c55e;
+        }
+
+        .window-controls button.close:hover {
+            color: #ef4444;
+        }
+
+        /* Toast Notification Styles */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background-color: #10B981;
+        }
+
+        .toast.error {
+            background-color: #EF4444;
+        }
+
+        .toast.info {
+            background-color: #3B82F6;
+        }
+
+        .toast i {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div id="toast" class="toast">
+        <i class="fas"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <div class="header">
+        <a href="index.html">
+            <img src="assets/pic/royalheirs.svg" alt="Logo School" width="40" height="40">
+            <h1>Royal Heirs Academy</h1>
+        </a>
+        <div class="window-controls">
+            <button onclick="window.electronAPI.minimize()" title="Minimize" class="minimize">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-width="2" d="M6 18L18 18"/>
+                </svg>
+            </button>
+            <button onclick="window.electronAPI.maximize()" title="Maximize/Restore" class="maximize">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <rect x="6" y="6" width="12" height="12" rx="2" stroke-width="2"/>
+                </svg>
+            </button>
+            <button onclick="window.electronAPI.close()" title="Close" class="close">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-width="2" d="M6 6l12 12M6 18L18 6"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="left-panel">
+            <div class="login-form-container">
+                <h2 class="login-title">Account Login</h2>
+                <form class="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <i class="fas fa-user input-icon-left"></i>
+                        <input type="text" id="username" placeholder="Enter your username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <i class="fas fa-lock input-icon-left"></i>
+                        <input type="password" id="password" placeholder="Enter your password">
+                        <i class="fas fa-eye input-icon-right" id="togglePassword"></i>
+                    </div>
+                    <button type="submit">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Sign In
+                    </button>
+                    <p id="errorMessage" style="display: none;"></p>
+                    <div class="forgot-password">
+                        <a href="forgot-password.html">Forgot Password?</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="right-panel">
+            <img src="assets/pic/removebgroyal.png" alt="Logo School" width="400" height="400">
+        </div>
+    </div>
+    
+</body>
+<script>
+    async function handleLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorMessage = document.getElementById('errorMessage');
+
+        try {
+            const response = await fetch('http://localhost:5000/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Store user data
+                localStorage.setItem('userData', JSON.stringify(data.userData));
+                // Set fresh login flag
+                sessionStorage.setItem('freshLogin', 'true');
+                // Show success toast
+                showToast('Login successful! Redirecting...', 'success');
+                // Redirect to the appropriate dashboard after a short delay
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1000);
+            } else {
+                showToast(data.message || 'Invalid credentials. Please try again.', 'error');
+            }
+        } catch (error) {
+            console.error("Error during login:", error);
+            showToast('An error occurred. Please try again.', 'error');
+        }
+    }
+    
+    // Function to show toast notifications
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const toastIcon = toast.querySelector('i');
+
+        // Set message
+        toastMessage.textContent = message;
+
+        // Set icon based on type
+        toastIcon.className = 'fas';
+        switch(type) {
+            case 'success':
+                toastIcon.classList.add('fa-check-circle');
+                break;
+            case 'error':
+                toastIcon.classList.add('fa-times-circle');
+                break;
+            case 'info':
+                toastIcon.classList.add('fa-info-circle');
+                break;
+        }
+
+        // Set toast type
+        toast.className = 'toast ' + type;
+
+        // Show toast
+        toast.classList.add('show');
+
+        // Hide toast after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+    
+    // Password toggle functionality
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            this.classList.remove('fa-eye');
+            this.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            this.classList.remove('fa-eye-slash');
+            this.classList.add('fa-eye');
+        }
+    });
+</script>
+</html>

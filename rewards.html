@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rewards Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="./dist/output.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./node_modules/flowbite/dist/flowbite.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                    },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #64748b;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            margin: auto;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Card styles */
+        .reward-card {
+            transition: all 0.3s ease;
+        }
+
+        .reward-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .reward-image {
+            height: 200px;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            transition: all 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 40;
+            overflow-y: auto;
+        }
+
+        .sidebar:hover {
+            width: 256px !important;
+            min-width: 256px !important;
+            max-width: 256px !important;
+        }
+
+        .sidebar:not(:hover) {
+            width: 80px !important;
+            min-width: 80px !important;
+            max-width: 80px !important;
+        }
+
+        .sidebar:not(:hover) .nav-text,
+        .sidebar:not(:hover) .welcome-text,
+        .sidebar:not(:hover) .footer-text {
+            display: none;
+        }
+
+        .sidebar:not(:hover) .nav-icon {
+            margin-right: 0;
+        }
+
+        .sidebar:not(:hover) .nav-item {
+            justify-content: center;
+            padding: 0.75rem;
+        }
+
+        .sidebar:not(:hover) .profile-section {
+            padding: 0.5rem;
+        }
+
+        .sidebar:not(:hover) .profile-image {
+            width: 40px;
+            height: 40px;
+        }
+
+        .sidebar:not(:hover) .footer-section {
+            padding: 0.5rem;
+        }
+
+        /* Add styles for main content to account for fixed sidebar */
+        main {
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar:hover + main {
+            
+        }
+
+        /* Fix icon positioning */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .nav-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-secondary-50 font-sans text-base text-secondary-600 relative antialiased">
+    <div class="fixed top-0 right-0 z-50 flex gap-2 select-none p-2">
+        <button onclick="window.electronAPI.minimize()" title="Minimize" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-blue-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 18"/></svg>
+        </button>
+        <button onclick="window.electronAPI.maximize()" title="Maximize/Restore" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-green-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" stroke-width="2"/></svg>
+        </button>
+        <button onclick="window.electronAPI.close()" title="Close" class="w-8 h-8 flex items-center justify-center rounded hover:bg-red-100 active:bg-red-200 text-gray-600 hover:text-red-600 transition-colors duration-150">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 6l12 12M6 18L18 6"/></svg>
+        </button>
+    </div>
+    <div class="flex min-h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar bg-gray-100 flex flex-col py-6 px-3 select-none shrink-0 shadow-xl z-10 border-r border-gray-200 relative">
+            <div class="flex flex-col items-center space-y-3 mb-8 profile-section">
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-primary-100 rounded-full opacity-70 blur-md transform group-hover:scale-110 transition-all duration-300"></div>
+                    <div class="relative bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-md profile-image">
+                        <img alt="Admin" class="rounded-full w-12 h-12 object-cover" src="assets/pic/removebgroyal.png"/>
+                    </div>
+                </div>
+                <div class="text-center welcome-text">
+                    <p class="text-xs font-bold uppercase tracking-wider mb-1 text-gray-500">Welcome</p>
+                    <p class="text-lg font-bold text-gray-800">ADMIN</p>
+                </div>
+            </div>
+            
+            <nav class="w-full flex flex-col space-y-1 font-medium text-sm mt-2">
+                <button onclick="window.location.href='admindashboard.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-chart-line w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Dashboard</span>
+                </button>
+                
+                <button onclick="window.location.href='adminstudentmodule.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-users w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Students</span>
+                </button>
+                
+                <button onclick="window.location.href='adminbookmodule.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-book w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Books</span>
+                </button>
+                
+                <button onclick="window.location.href='adminhistorymodule.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-history w-5 text-center nav-icon"></i>
+                    <span class="nav-text">History</span>
+                </button>
+                
+                <button onclick="window.location.href='borrowed.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-hand-holding w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Borrow Book</span>
+                </button>
+                
+                <button onclick="window.location.href='returned.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-undo w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Return Book</span>
+                </button>
+                
+                <button id="rewards-menu" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary-100 text-primary-700 font-semibold transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-trophy w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Rewards</span>
+                </button>
+
+                <button onclick="window.location.href='archive.html'" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-archive w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Archive</span>
+                </button>
+                
+                <div class="border-t border-gray-300 my-2 px-3"></div>
+                
+                <button onclick="logout()" 
+                    class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-100 transform hover:translate-x-1 transition-all active:scale-95">
+                    <i class="fas fa-sign-out-alt w-5 text-center nav-icon"></i>
+                    <span class="nav-text">Log Out</span>
+                </button>
+            </nav>
+            
+            <div class="mt-auto px-4 py-4 footer-section">
+                <div class="bg-primary-50 border border-primary-100 rounded-lg px-3 py-2 text-xs text-gray-700 footer-text">
+                    <p class="mb-1 font-medium text-gray-800">Royal Heirs Academy</p>
+                    <p>Library Management System</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-secondary-50">
+            <div class="container mx-auto px-6 py-8">
+                <!-- Header Section -->
+                <header class="mb-8">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h1 class="text-3xl font-bold text-secondary-900 leading-tight">
+                                Rewards Management
+                            </h1>
+                            <p class="mt-1 text-secondary-500">Manage student rewards and points system</p>
+                        </div>
+                        
+                        <div class="mt-4 md:mt-0">
+                            <button onclick="addReward()" class="px-4 py-2 bg-primary-600 text-white rounded-lg shadow hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all flex items-center">
+                                <i class="fas fa-plus mr-2"></i>
+                                <span>Add Reward</span>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Search Bar -->
+                <div class="bg-white rounded-xl shadow-card p-4 mb-6 flex flex-wrap items-center justify-between gap-4 border border-secondary-100">
+                    <div class="relative flex items-center space-x-2">
+                        <select 
+                            id="searchColumn" 
+                            class="px-3 py-2 rounded-lg border border-secondary-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white">
+                            <option value="all">All Fields</option>
+                            <option value="name">Reward Name</option>
+                            <option value="points">Points Required</option>
+                            <option value="description">Description</option>
+                        </select>
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400"></i>
+                            <input 
+                                class="pl-10 pr-4 py-2 rounded-lg border border-secondary-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 w-64" 
+                                type="text" 
+                                id="rewardSearch" 
+                                placeholder="Search rewards..." 
+                                oninput="searchRewards()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rewards Grid -->
+                <div id="rewardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Rewards will be populated here -->
+                    <div class="animate-pulse">
+                        <div class="bg-white rounded-xl shadow-card overflow-hidden">
+                            <div class="h-48 bg-secondary-200"></div>
+                            <div class="p-4 space-y-3">
+                                <div class="h-4 bg-secondary-200 rounded w-3/4"></div>
+                                <div class="h-4 bg-secondary-200 rounded w-1/2"></div>
+                                <div class="h-4 bg-secondary-200 rounded w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Reward Modal -->
+    <div id="addRewardModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-secondary-900">Add Reward</h2>
+                <button onclick="closeModal()" class="text-secondary-400 hover:text-secondary-600 focus:outline-none">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="addRewardForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Reward Item Name</label>
+                    <input type="text" id="rewardName" name="name" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Points Required</label>
+                    <input type="number" id="pointsRequired" name="points_required" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" min="1" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Item Count</label>
+                    <input type="number" id="itemCount" name="item_count" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" min="1" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Item Image</label>
+                    <input type="file" id="itemImage" name="image" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" accept="image/*">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Reward Description</label>
+                    <textarea id="rewardDescription" name="description" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" rows="3" required></textarea>
+                </div>
+                
+                <button type="submit" class="w-full mt-6 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center">
+                    <i class="fas fa-save mr-2"></i>
+                    <span>Save Reward</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Redeem Reward Modal -->
+    <div id="redeemRewardModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-secondary-900">Redeem Reward</h2>
+                <button onclick="closeRedeemModal()" class="text-secondary-400 hover:text-secondary-600 focus:outline-none">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="redeemRewardForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Select Student</label>
+                    <select id="studentSelect" name="student_id" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+                        <option value="">Select a student...</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-secondary-700 mb-1">Quantity</label>
+                    <input type="number" id="redeemQuantity" name="quantity" class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" min="1" value="1" required>
+                </div>
+                
+                <div class="bg-secondary-50 p-4 rounded-lg">
+                    <h3 class="font-medium text-secondary-900 mb-2">Reward Details</h3>
+                    <div id="redeemRewardDetails" class="text-sm text-secondary-600">
+                        <!-- Reward details will be populated here -->
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full mt-6 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center">
+                    <i class="fas fa-check mr-2"></i>
+                    <span>Confirm Redemption</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="modal-content bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
+            <div class="text-center">
+                <i class="fas fa-check-circle text-green-500 text-4xl mb-4"></i>
+                <p id="modalMessage" class="text-lg font-semibold"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmationModal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="modal-content bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle text-amber-500 text-4xl mb-4"></i>
+                <h3 class="text-lg font-semibold text-secondary-900 mb-2">Confirm Deletion</h3>
+                <p class="text-secondary-600 mb-6">Are you sure you want to delete this reward? This action cannot be undone.</p>
+                <div class="flex justify-center space-x-4">
+                    <button onclick="closeDeleteConfirmation()" class="px-4 py-2 bg-secondary-200 text-secondary-700 rounded-lg hover:bg-secondary-300 transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentReward = null;
+        let storedRewardData = [];
+        let rewardToDelete = null;
+
+        // Function to fetch rewards
+        async function fetchRewards() {
+            try {
+                const response = await fetch('http://localhost:5000/api/rewards');
+                const data = await response.json();
+                
+                if (data.success) {
+                    storedRewardData = data.rewards;
+                    renderRewardsGrid(data.rewards);
+                } else {
+                    showModal('Error fetching rewards data', 'error');
+                }
+            } catch (error) {
+                console.error("Error fetching rewards:", error);
+                showModal('Error fetching rewards data', 'error');
+            }
+        }
+
+        // Function to render rewards grid
+        function renderRewardsGrid(rewards) {
+            const grid = document.getElementById('rewardsGrid');
+            grid.innerHTML = '';
+
+            if (rewards.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-trophy text-secondary-300 text-4xl mb-4"></i>
+                        <p class="text-lg font-medium text-secondary-900">No rewards available</p>
+                        <p class="text-sm text-secondary-500 mt-2">Add new rewards to get started</p>
+                    </div>
+                `;
+                return;
+            }
+
+            rewards.forEach(reward => {
+                const card = document.createElement('div');
+                card.className = 'reward-card bg-white rounded-xl shadow-card overflow-hidden';
+                card.innerHTML = `
+                    <div class="relative">
+                        ${reward.image_url ? 
+                            `<img src="http://localhost:5000${reward.image_url}" 
+                                  alt="${reward.name}" 
+                                  class="reward-image"
+                                  onerror="this.parentElement.innerHTML = '<div class=\'reward-image flex items-center justify-center bg-secondary-50\'><i class=\'fas fa-trophy text-6xl text-secondary-300\'></i></div>'">` :
+                            `<div class="reward-image flex items-center justify-center bg-secondary-50">
+                                <i class="fas fa-trophy text-6xl text-secondary-300"></i>
+                            </div>`
+                        }
+                        <div class="absolute top-2 right-2">
+                            <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary-50 text-primary-700">
+                                ${reward.points_required} pts
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg text-secondary-900 mb-1">${reward.name}</h3>
+                        <p class="text-sm text-secondary-600 mb-3">${reward.description}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-secondary-700">
+                                Available: ${reward.item_count}
+                            </span>
+                            <div class="flex space-x-2">
+                                <button onclick="redeemReward(${reward.id})" class="px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm">
+                                    Redeem
+                                </button>
+                                <button onclick="deleteReward(${reward.id})" class="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Function to add reward
+        function addReward() {
+            document.getElementById('addRewardModal').style.display = 'flex';
+        }
+
+        // Function to close modal
+        function closeModal() {
+            document.getElementById('addRewardModal').style.display = 'none';
+            document.getElementById('addRewardForm').reset();
+        }
+
+        // Function to close redeem modal
+        function closeRedeemModal() {
+            document.getElementById('redeemRewardModal').style.display = 'none';
+            document.getElementById('redeemRewardForm').reset();
+        }
+
+        // Function to submit reward
+        async function submitReward(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/rewards', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showModal('Reward added successfully!', 'success');
+                    closeModal();
+                    fetchRewards();
+                } else {
+                    showModal(data.error || 'Failed to add reward', 'error');
+                }
+            } catch (error) {
+                console.error("Error adding reward:", error);
+                showModal('Error adding reward: ' + error.message, 'error');
+            }
+        }
+
+        // Function to redeem reward
+        async function redeemReward(rewardId) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/rewards/${rewardId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentReward = data.reward;
+                    
+                    // Populate student select
+                    const studentsResponse = await fetch('http://localhost:5000/api/students');
+                    const studentsData = await studentsResponse.json();
+                    
+                    if (studentsData) {
+                        const studentSelect = document.getElementById('studentSelect');
+                        studentSelect.innerHTML = '<option value="">Select a student...</option>';
+                        studentsData.forEach(student => {
+                            studentSelect.innerHTML += `<option value="${student.id}">${student.name}</option>`;
+                        });
+                    }
+
+                    // Populate reward details
+                    const detailsDiv = document.getElementById('redeemRewardDetails');
+                    detailsDiv.innerHTML = `
+                        <p><strong>Reward:</strong> ${currentReward.name}</p>
+                        <p><strong>Points Required:</strong> ${currentReward.points_required}</p>
+                        <p><strong>Available:</strong> ${currentReward.item_count}</p>
+                    `;
+
+                    document.getElementById('redeemRewardModal').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error("Error preparing reward redemption:", error);
+                showModal('Error preparing reward redemption', 'error');
+            }
+        }
+
+        // Function to confirm redemption
+        async function confirmRedeem(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            formData.append('reward_id', currentReward.id);
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/rewards/redeem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reward_id: currentReward.id,
+                        student_id: formData.get('student_id'),
+                        quantity: parseInt(formData.get('quantity'))
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showModal('Reward redeemed successfully!', 'success');
+                    closeRedeemModal();
+                    fetchRewards();
+                } else {
+                    showModal(data.error || 'Failed to redeem reward', 'error');
+                }
+            } catch (error) {
+                console.error("Error redeeming reward:", error);
+                showModal('Error redeeming reward: ' + error.message, 'error');
+            }
+        }
+
+        // Function to show delete confirmation
+        function deleteReward(rewardId) {
+            rewardToDelete = rewardId;
+            document.getElementById('deleteConfirmationModal').style.display = 'flex';
+        }
+
+        // Function to close delete confirmation
+        function closeDeleteConfirmation() {
+            document.getElementById('deleteConfirmationModal').style.display = 'none';
+            rewardToDelete = null;
+        }
+
+        // Function to confirm and execute deletion
+        async function confirmDelete() {
+            if (!rewardToDelete) return;
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/rewards/${rewardToDelete}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showModal('Reward deleted successfully!', 'success');
+                    closeDeleteConfirmation();
+                    fetchRewards();
+                } else {
+                    showModal(data.error || 'Failed to delete reward', 'error');
+                }
+            } catch (error) {
+                console.error("Error deleting reward:", error);
+                showModal('Error deleting reward: ' + error.message, 'error');
+            }
+        }
+
+        // Function to search rewards
+        function searchRewards() {
+            const searchText = document.getElementById('rewardSearch').value.toLowerCase();
+            const searchColumn = document.getElementById('searchColumn').value;
+
+            // Filter rewards based on selected column
+            let filteredRewards = storedRewardData;
+            if (searchText) {
+                filteredRewards = storedRewardData.filter(reward => {
+                    switch(searchColumn) {
+                        case 'name':
+                            return reward.name?.toLowerCase().includes(searchText);
+                        case 'points':
+                            return reward.points_required?.toString().includes(searchText);
+                        case 'description':
+                            return reward.description?.toLowerCase().includes(searchText);
+                        case 'all':
+                        default:
+                            return reward.name?.toLowerCase().includes(searchText) ||
+                                   reward.points_required?.toString().includes(searchText) ||
+                                   reward.description?.toLowerCase().includes(searchText);
+                    }
+                });
+            }
+
+            // Update the grid with filtered results
+            renderRewardsGrid(filteredRewards);
+        }
+
+        // Function to show modal messages
+        function showModal(message, type = 'info') {
+            const modal = document.getElementById('messageModal');
+            const modalContent = modal.querySelector('.modal-content');
+            const modalMessage = document.getElementById('modalMessage');
+            const iconElement = modalContent.querySelector('i');
+            
+            // Remove existing types and add new one
+            modalContent.classList.remove('success', 'error', 'info', 'warning');
+            modalContent.classList.add(type);
+            
+            // Update icon based on type
+            iconElement.className = ''; // Clear existing classes
+            
+            switch(type) {
+                case 'success':
+                    iconElement.className = 'fas fa-check-circle text-green-500 text-4xl mb-4';
+                    break;
+                case 'error':
+                    iconElement.className = 'fas fa-times-circle text-red-500 text-4xl mb-4';
+                    break;
+                case 'info':
+                    iconElement.className = 'fas fa-info-circle text-blue-500 text-4xl mb-4';
+                    break;
+                case 'warning':
+                    iconElement.className = 'fas fa-exclamation-triangle text-amber-500 text-4xl mb-4';
+                    break;
+                default:
+                    iconElement.className = 'fas fa-info-circle text-blue-500 text-4xl mb-4';
+            }
+            
+            modalMessage.textContent = message;
+            modal.style.display = 'flex';
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 3000);
+        }
+
+        // Function to logout
+        function logout() {
+            window.location.href = 'login.html';
+        }
+
+        // Event listeners
+        window.onclick = function(event) {
+            const addRewardModal = document.getElementById('addRewardModal');
+            const redeemRewardModal = document.getElementById('redeemRewardModal');
+            const messageModal = document.getElementById('messageModal');
+            const deleteConfirmationModal = document.getElementById('deleteConfirmationModal');
+            
+            if (event.target === addRewardModal) {
+                closeModal();
+            }
+            if (event.target === redeemRewardModal) {
+                closeRedeemModal();
+            }
+            if (event.target === messageModal) {
+                messageModal.style.display = 'none';
+            }
+            if (event.target === deleteConfirmationModal) {
+                closeDeleteConfirmation();
+            }
+        }
+
+        // Form submission event listeners
+        document.getElementById('addRewardForm').addEventListener('submit', submitReward);
+        document.getElementById('redeemRewardForm').addEventListener('submit', confirmRedeem);
+
+        // Initialize the page
+        window.onload = function() {
+            fetchRewards();
+        };
+    </script>
+</body>
+</html> 
