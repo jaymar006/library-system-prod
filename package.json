@@ -31,7 +31,8 @@
           "server.js",
           "student.db",
           "assets/**/*",
-          "node_modules/**/*"
+          "node_modules/**/*",
+          "dist/**/*"
         ]
       }
     ],
@@ -40,6 +41,10 @@
       {
         "from": "student.db",
         "to": "student.db"
+      },
+      {
+        "from": "dist/output.css",
+        "to": "dist/output.css"
       }
     ]
   },

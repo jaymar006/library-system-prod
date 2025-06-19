@@ -178,6 +178,7 @@ db.serialize(() => {
         description TEXT,
         points_required INTEGER NOT NULL,
         image_url TEXT,
+        item_count INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
