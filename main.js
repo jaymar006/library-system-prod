@@ -81,9 +81,6 @@ function startServer() {
     // Wait for server to start
     setTimeout(() => {
         isServerStarted = true;
-        if (mainWindow) {
-            mainWindow.loadFile('index.html');
-        }
     }, 2000);
 }
 

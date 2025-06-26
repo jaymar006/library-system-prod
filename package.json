@@ -9,7 +9,7 @@
     "build:css": "tailwindcss -i ./src/input.css -o ./dist/output.css && tailwindcss -i ./src/input.css -o ./src/output.css",
     "watch:css": "concurrently \"tailwindcss -i ./src/input.css -o ./dist/output.css --watch\" \"tailwindcss -i ./src/input.css -o ./src/output.css --watch\"",
     "pack": "electron-builder --dir --win portable",
-    "build": "npm run build:css && electron-builder --win portable"
+    "build": "npm run build:css && electron-builder --win nsis"
   },
   "build": {
     "appId": "com.library.app",
@@ -18,7 +18,8 @@
       "output": "dist"
     },
     "win": {
-      "target": "portable"
+      "target": "portable",
+      "sign": false
     },
     "files": [
       "main.js",
