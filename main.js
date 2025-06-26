@@ -1,9 +1,14 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const QRCode = require('qrcode');
 const { spawn } = require('child_process');
+const fs = require('fs');
 const isDev = process.env.NODE_ENV === 'development';
+
+const dbPath = isDev
+    ? path.join(__dirname, 'student.db')
+    : path.join(process.resourcesPath, 'app', 'student.db');
 
 // Prevent multiple instances
 const gotTheLock = app.requestSingleInstanceLock();
@@ -24,7 +29,7 @@ function startServer() {
 
     const serverPath = isDev 
         ? path.join(__dirname, 'server.js')
-        : path.join(process.resourcesPath, 'server.js');
+        : path.join(process.resourcesPath, 'app', 'server.js');
 
     console.log('[DEBUG] Starting server from:', serverPath);
     console.log('[DEBUG] Current working directory:', process.cwd());
@@ -36,10 +41,13 @@ function startServer() {
     }
 
     // Set the working directory to where the server.js is located
-    const workingDir = isDev ? __dirname : process.resourcesPath;
+    const workingDir = isDev ? __dirname : path.join(process.resourcesPath, 'app');
+
+    // Create a write stream for logging
+    const logPath = path.join(app.getPath('userData'), 'server.log');
+    const logStream = fs.createWriteStream(logPath, { flags: 'a' });
 
     serverProcess = spawn('node', [serverPath], {
-        stdio: 'inherit',
         cwd: workingDir,
         env: {
             ...process.env,
@@ -49,14 +57,25 @@ function startServer() {
         }
     });
 
+    serverProcess.stdout && serverProcess.stdout.on('data', (data) => {
+        logStream.write(`[STDOUT] ${data}`);
+    });
+    serverProcess.stderr && serverProcess.stderr.on('data', (data) => {
+        logStream.write(`[STDERR] ${data}`);
+    });
+
     serverProcess.on('error', (err) => {
-        console.error('[DEBUG] Failed to start server:', err);
+        logStream.write(`[ERROR] Failed to start server: ${err}\n`);
         isServerStarted = false;
+        dialog.showErrorBox('Server Error', 'Failed to start the backend server. Check server.log for details.');
     });
 
     serverProcess.on('close', (code) => {
-        console.log(`[DEBUG] Server process exited with code ${code}`);
+        logStream.write(`[CLOSE] Server process exited with code ${code}\n`);
         isServerStarted = false;
+        if (typeof code === 'number' && code !== 0) {
+            dialog.showErrorBox('Server Error', `The backend server exited with code ${code}. Check server.log for details.`);
+        }
     });
 
     // Wait for server to start
@@ -77,7 +96,7 @@ app.on('second-instance', (event, commandLine, workingDirectory) => {
 });
 
 // Initialize database
-const db = new sqlite3.Database('student.db');
+const db = new sqlite3.Database(dbPath);
 
 // Create users table if it doesn't exist
 db.run(`CREATE TABLE IF NOT EXISTS users (
@@ -544,7 +563,7 @@ ipcMain.handle('update-book', async (event, bookData) => {
 // Add overdue books handler
 ipcMain.handle('get-overdue-books', async () => {
     return new Promise((resolve) => {
-        const db = new sqlite3.Database('student.db');
+        const db = new sqlite3.Database(dbPath);
         
         db.all(`
             SELECT 
@@ -635,6 +654,7 @@ function createWindow() {
         height: 800,
         frame: false,
         autoHideMenuBar: true,
+        fullscreen: true,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -643,6 +663,8 @@ function createWindow() {
             allowRunningInsecureContent: false
         }
     });
+
+    mainWindow.maximize();
 
     // Get the correct base path for resources
     const basePath = isDev ? __dirname : process.resourcesPath;

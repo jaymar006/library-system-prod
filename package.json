@@ -6,8 +6,8 @@
     "start": "concurrently \"node server.js\" \"electron .\"",
     "server": "node server.js",
     "electron": "electron .",
-    "build:css": "tailwindcss -i ./src/input.css -o ./dist/output.css",
-    "watch:css": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
+    "build:css": "tailwindcss -i ./src/input.css -o ./dist/output.css && tailwindcss -i ./src/input.css -o ./src/output.css",
+    "watch:css": "concurrently \"tailwindcss -i ./src/input.css -o ./dist/output.css --watch\" \"tailwindcss -i ./src/input.css -o ./src/output.css --watch\"",
     "pack": "electron-builder --dir --win portable",
     "build": "npm run build:css && electron-builder --win portable"
   },
@@ -21,32 +21,46 @@
       "target": "portable"
     },
     "files": [
-      "**/*"
+      "main.js",
+      "server.js",
+      "renderer.js",
+      "preload.js",
+      "studentdashboard.html",
+      "admin*.html",
+      "archive.html",
+      "booklist.html",
+      "borrowed.html",
+      "history.html",
+      "index.html",
+      "login.html",
+      "points.html",
+      "recommended.html",
+      "reset-password.html",
+      "reset-password.php",
+      "returned.html",
+      "rewards.html",
+      "forgot-password.html",
+      "assets/**/*",
+      "student.db",
+      "!books.db",
+      "!users.db",
+      "!build-css.js",
+      "!check-tables.js",
+      "!clear-database.js",
+      "!migration-books.js",
+      "!*.json",
+      "!*.md",
+      "!*.txt",
+      "!.vscode/**/*",
+      "!src/input.css"
     ],
-    "extraResources": [
-      {
-        "from": ".",
-        "to": ".",
-        "filter": [
-          "server.js",
-          "student.db",
-          "assets/**/*",
-          "node_modules/**/*",
-          "dist/**/*"
-        ]
-      }
-    ],
-    "asar": false,
     "extraFiles": [
       {
-        "from": "student.db",
-        "to": "student.db"
-      },
-      {
-        "from": "dist/output.css",
+        "from": "src/output.css",
         "to": "dist/output.css"
       }
-    ]
+    ],
+    "asar": false
   },
   "keywords": [],
   "author": "",

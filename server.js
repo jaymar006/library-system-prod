@@ -1,3 +1,8 @@
+console.log('[DEBUG] server.js started');
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught Exception:', err);
+  process.exit(1);
+});
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 // const { Pool } = require('pg');
@@ -66,7 +71,14 @@ app.use(express.static(path.join(__dirname)));
 //     password: 'your_password',
 //     port: 5000, // Default PostgreSQL port
 // });
-const db = new sqlite3.Database('./student.db', (err) => {
+const dbPath = process.env.NODE_ENV === 'development'
+    ? path.join(__dirname, 'student.db')
+    : path.join(process.env.RESOURCES_PATH, 'app', 'student.db');
+
+console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV);
+console.log('[DEBUG] dbPath:', dbPath);
+
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error connecting to database:', err.message);
     } else {
@@ -517,7 +529,7 @@ app.post('/api/books', upload.single('image'), (req, res) => {
 // Add this endpoint to server.js
 app.get('/api/history', (req, res) => {
     // Updated SQL query to join with students and books tables
-    const db = new sqlite3.Database('student.db');
+    const db = new sqlite3.Database(dbPath);
     db.all(`
         SELECT 
             b.id,
@@ -2960,7 +2972,7 @@ async function sendQRCodeEmail(studentId) {
 // Add this with other API endpoints
 app.post('/api/students/send-qr-email/:id', async (req, res) => {
     try {
-        const studentId = parseInt(req.params.id);
+        const studentId = req.params.id; // Use string ID directly
         await sendQRCodeEmail(studentId);
         res.json({ success: true, message: 'QR code email sent successfully' });
     } catch (error) {
