@@ -5,6 +5,8 @@ const QRCode = require('qrcode');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const isDev = process.env.NODE_ENV === 'development';
+const fetch = require('node-fetch');
+const os = require('os');
 
 const dbPath = isDev
     ? path.join(__dirname, 'student.db')
@@ -20,6 +22,20 @@ if (!gotTheLock) {
 let mainWindow;
 let serverProcess;
 let isServerStarted = false;
+
+// Function to get local IP address
+function getLocalIp() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const interface of interfaces[name]) {
+            // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+            if (interface.family === 'IPv4' && !interface.internal) {
+                return interface.address;
+            }
+        }
+    }
+    return 'localhost'; // fallback
+}
 
 function startServer() {
     if (isServerStarted) {
@@ -433,7 +449,7 @@ ipcMain.handle('add-students', async (event, studentsData) => {
                                         
                                         // Send password change email if email is provided
                                         if (email) {
-                                            fetch('http://localhost:5000/api/send-password-change-email', {
+                                            fetch(`http://${getLocalIp()}:5000/api/send-password-change-email`, {
                                                 method: 'POST',
                                                 headers: {
                                                     'Content-Type': 'application/json'

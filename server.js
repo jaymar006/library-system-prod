@@ -15,12 +15,27 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 const schedule = require('node-schedule');
+const os = require('os');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Function to get local IP address
+function getLocalIp() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const interface of interfaces[name]) {
+            // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+            if (interface.family === 'IPv4' && !interface.internal) {
+                return interface.address;
+            }
+        }
+    }
+    return 'localhost'; // fallback
+}
+
 // Add this near the top of the file, after other constants
-const BASE_URL = process.env.BASE_URL || 'http://192.168.68.116:5000';
+const BASE_URL = process.env.BASE_URL || `http://${getLocalIp()}:5000`;
 
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, 'assets', 'pic', 'bookcover');

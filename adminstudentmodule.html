@@ -488,7 +488,14 @@
     </div>
 
     <script>
-    const API_BASE_URL = "http://localhost:5000/api/students";
+    // Dynamically determine the local IP address for BASE_URL
+    function getLocalIp() {
+        // Try to get the IP from the window location (works if accessed via IP)
+        const host = window.location.hostname;
+        return host ? host : 'localhost';
+    }
+    const BASE_URL = `http://${getLocalIp()}:5000`;
+    const API_BASE_URL = `${BASE_URL}/api/students`;
     let storedStudentData = [];
     let studentFormCount = 1;
     let currentPage = 1;
@@ -1213,6 +1220,32 @@
                             if (!response.ok) {
                                 const result = await response.json();
                                 throw new Error(result.error || 'Failed to add student');
+                            }
+
+                            // Get the created student data to extract ID and email
+                            const studentData = await response.json();
+                            
+                            // Send password change email if email is provided
+                            if (student.email) {
+                                try {
+                                    const emailResponse = await fetch(`${BASE_URL}/api/send-password-change-email`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            studentId: studentData.id,
+                                            email: student.email,
+                                            name: student.name
+                                        })
+                                    });
+                                    
+                                    if (!emailResponse.ok) {
+                                        console.error('Failed to send password reset email for:', student.name);
+                                    }
+                                } catch (emailError) {
+                                    console.error('Error sending password reset email for:', student.name, emailError);
+                                }
                             }
 
                             successCount++;

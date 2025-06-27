@@ -852,9 +852,9 @@
         
         // Initialize chart with fallback data if needed
         function initializeChart() {
-            // Sample data for demonstration - this would be replaced with actual data from API
+            // Use empty data (all zeros) instead of placeholder data
             const chartData = {
-                books: [3, 5, 8, 12, 15, 18]
+                books: [0, 0, 0, 0, 0, 0]
             };
             
             // Update chart with data
@@ -925,11 +925,11 @@
                 const historyData = await response.json();
                 console.log('Chart data received:', historyData);
                 
-                // If no data available, use minimal placeholder data
+                // If no data available, use empty data instead of placeholder
                 if (!historyData || (Array.isArray(historyData) && historyData.length === 0)) {
-                    console.log('No history data found, using placeholder data');
+                    console.log('No history data found, showing empty chart');
                     updateChart({
-                        books: [3, 5, 8, 12, 15, 18]
+                        books: [0, 0, 0, 0, 0, 0]
                     });
                     return;
                 }
@@ -941,7 +941,7 @@
                 if (!Array.isArray(records)) {
                     console.warn('Unexpected history data format:', historyData);
                     updateChart({
-                        books: [3, 5, 8, 12, 15, 18]
+                        books: [0, 0, 0, 0, 0, 0]
                     });
                     return;
                 }
@@ -1139,9 +1139,9 @@
                 
             } catch (error) {
                 console.error('Error fetching chart data:', error);
-                // Use placeholder data in case of error
+                // Use empty data in case of error instead of placeholder
                 updateChart({
-                    books: [3, 5, 8, 12, 15, 18]
+                    books: [0, 0, 0, 0, 0, 0]
                 });
             }
         }
