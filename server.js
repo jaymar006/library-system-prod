@@ -591,21 +591,21 @@ app.get('/api/dashboard', async (req, res) => {
         });
 
         const totalBorrowedBooks = await new Promise((resolve, reject) => {
-            db.get('SELECT COUNT(*) AS count FROM borrowings', [], (err, row) => {
+            db.get('SELECT COUNT(*) AS count FROM borrowings WHERE settled = 0', [], (err, row) => {
                 if (err) reject(err);
                 else resolve(row.count);
             });
         });
 
         const returnedBooks = await new Promise((resolve, reject) => {
-            db.get('SELECT COUNT(*) AS count FROM borrowings WHERE return_date IS NOT NULL', [], (err, row) => {
+            db.get('SELECT COUNT(*) AS count FROM borrowings WHERE settled = 1', [], (err, row) => {
                 if (err) reject(err);
                 else resolve(row.count);
             });
         });
 
         const pendingBooks = await new Promise((resolve, reject) => {
-            db.get('SELECT COUNT(*) AS count FROM borrowings WHERE return_date IS NULL', [], (err, row) => {
+            db.get('SELECT COUNT(*) AS count FROM borrowings WHERE settled = 0', [], (err, row) => {
                 if (err) reject(err);
                 else resolve(row.count);
             });
@@ -706,7 +706,7 @@ app.get('/api/borrowings/check', (req, res) => {
         FROM borrowings b
         JOIN students s ON b.student_id = s.id
         JOIN books bk ON b.book_id = bk.id
-        WHERE b.student_id = ? AND b.book_id = ? AND b.return_date IS NULL
+        WHERE b.student_id = ? AND b.book_id = ? AND b.settled = 0
         ORDER BY b.borrow_date DESC
         LIMIT 1
     `;
@@ -1052,7 +1052,7 @@ app.post('/api/borrow-book', (req, res) => {
 
             // Check if the student has any active borrowings of this book
             db.get(
-                'SELECT * FROM borrowings WHERE student_id = ? AND book_id = ? AND return_date IS NULL',
+                'SELECT * FROM borrowings WHERE student_id = ? AND book_id = ? AND settled = 0',
                 [studentId, bookId],
                 (err, existingBorrowing) => {
                     if (err) {
@@ -1338,13 +1338,13 @@ app.get('/api/student/history/:studentId', (req, res) => {
     // Apply filter if specified
     switch (filter) {
         case 'borrowed':
-            query += " AND b.return_date IS NULL";
+            query += " AND b.settled = 0";
             break;
         case 'returned':
-            query += " AND b.return_date IS NOT NULL";
+            query += " AND b.settled = 1";
             break;
         case 'pending':
-            query += " AND b.return_date IS NULL AND b.due_date < datetime('now')";
+            query += " AND b.settled = 0 AND b.due_date < datetime('now')";
             break;
     }
 
@@ -1601,7 +1601,7 @@ app.get('/api/overdue-books', (req, res) => {
         FROM borrowings b
         JOIN books bk ON b.book_id = bk.id
         JOIN students s ON b.student_id = s.id
-        WHERE b.return_date IS NULL 
+        WHERE b.settled = 0 
         AND b.due_date <= datetime('now', 'localtime')
         ORDER BY b.due_date ASC
     `;
@@ -2427,7 +2427,7 @@ app.get('/api/borrowed-books/:studentId', (req, res) => {
         SELECT bk.id, bk.name as name, bk.author
         FROM books bk
         JOIN borrowings b ON bk.id = b.book_id
-        WHERE b.student_id = ? AND b.return_date IS NULL
+        WHERE b.student_id = ? AND b.settled = 0
     `;
     const params = [studentId];
     if (query) {
@@ -2449,7 +2449,7 @@ app.get('/api/available-books', (req, res) => {
     let sql = `
         SELECT bk.id, bk.name as name, bk.author
         FROM books bk
-        WHERE bk.id NOT IN (SELECT book_id FROM borrowings WHERE return_date IS NULL)
+        WHERE bk.copies_available > 0
     `;
     const params = [];
     if (query) {
@@ -2998,6 +2998,59 @@ app.post('/api/students/send-qr-email/:id', async (req, res) => {
             error: error.message 
         });
     }
+});
+
+// Add endpoint to reset book ID counter
+app.post('/api/reset-book-counter', (req, res) => {
+    db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        
+        // Delete all books
+        db.run('DELETE FROM books', [], function(err) {
+            if (err) {
+                db.run('ROLLBACK');
+                console.error("Database error:", err.message);
+                return res.status(500).json({ error: "Failed to delete books" });
+            }
+            
+            // Reset the auto-increment counter
+            db.run('DELETE FROM sqlite_sequence WHERE name = "books"', [], function(err) {
+                if (err) {
+                    db.run('ROLLBACK');
+                    console.error("Database error:", err.message);
+                    return res.status(500).json({ error: "Failed to reset counter" });
+                }
+                
+                db.run('COMMIT');
+                res.json({ 
+                    success: true, 
+                    message: "Book ID counter reset successfully. New books will start from ID 1." 
+                });
+            });
+        });
+    });
+});
+
+// Add endpoint to reset student ID counter
+app.post('/api/reset-student-counter', (req, res) => {
+    db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        
+        // Delete all students
+        db.run('DELETE FROM students', [], function(err) {
+            if (err) {
+                db.run('ROLLBACK');
+                console.error("Database error:", err.message);
+                return res.status(500).json({ error: "Failed to delete students" });
+            }
+            
+            db.run('COMMIT');
+            res.json({ 
+                success: true, 
+                message: "All students deleted successfully. New students will start from ID format: YYYY-0001" 
+            });
+        });
+    });
 });
 
 

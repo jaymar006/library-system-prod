@@ -353,12 +353,6 @@
                     <div class="text-sm ${reward.available ? 'text-green-600' : 'text-red-600'} mb-4">
                         ${reward.available ? 'Available' : 'Unavailable'}
                     </div>
-                    ${reward.available ? `
-                        <button onclick="redeemReward(${reward.id}, ${reward.points})" 
-                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            Redeem Reward
-                        </button>
-                    ` : ''}
                 </div>
             `;
             modal.classList.remove('hidden');
