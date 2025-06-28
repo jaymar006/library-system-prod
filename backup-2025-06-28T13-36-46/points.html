@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History - Library Management System</title>
+    <title>Points - Library Management System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="assets/css/output.css" rel="stylesheet">
+    <link href="dist/win-unpacked/dist/output.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom scrollbar for sidebar */
@@ -17,51 +17,35 @@
             border-radius: 3px;
         }
 
-        /* History item styles */
-        .history-item {
+        /* Points card styles */
+        .points-card {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .reward-card {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .reward-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .points-history-item {
             border-left: 4px solid #4f46e5;
             transition: all 0.3s ease;
         }
 
-        .history-item:hover {
+        .points-history-item:hover {
             background-color: #f3f4f6;
             transform: translateX(5px);
-        }
-
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .status-badge.borrowed {
-            background-color: #e0e7ff;
-            color: #4f46e5;
-        }
-
-        .status-badge.returned {
-            background-color: #dcfce7;
-            color: #16a34a;
-        }
-
-        .status-badge.overdue {
-            background-color: #fee2e2;
-            color: #dc2626;
-        }
-
-        /* Filter styles */
-        .filter-button {
-            transition: all 0.3s ease;
-        }
-
-        .filter-button:hover {
-            transform: translateY(-2px);
-        }
-
-        .filter-button.active {
-            background-color: #4f46e5;
-            color: white;
         }
     </style>
 </head>
@@ -106,12 +90,12 @@
                     <span>Recommended Books</span>
                 </button>
                 
-                <button onclick="window.location.href='points.html'" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                <button onclick="window.location.href='points.html'" class="menu-btn active flex items-center space-x-3 px-4 py-3 rounded-lg bg-blue-100 text-blue-700 font-semibold transform hover:translate-x-1 transition-all active:scale-95">
                     <i class="fas fa-star w-5 text-center"></i>
                     <span>Reward Points</span>
                 </button>
                 
-                <button onclick="window.location.href='history.html'" class="menu-btn active flex items-center space-x-3 px-4 py-3 rounded-lg bg-blue-100 text-blue-700 font-semibold transform hover:translate-x-1 transition-all active:scale-95">
+                <button onclick="window.location.href='history.html'" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
                     <i class="fas fa-history w-5 text-center"></i>
                     <span>History</span>
                 </button>
@@ -141,36 +125,74 @@
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
             <div class="container mx-auto px-4 py-6 max-w-5xl">
                 <h1 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                    <i class="fas fa-history text-blue-600 mr-2"></i> Borrowing History
+                    <i class="fas fa-star text-blue-600 mr-2"></i> Reward Points
                 </h1>
 
-                <!-- Filters -->
-                <div class="bg-white rounded-xl shadow-md p-6 mb-8">
-                    <div class="flex flex-wrap gap-4">
-                        <button onclick="filterHistory('all')" class="filter-button active px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
-                            <i class="fas fa-list mr-2"></i> All
-                        </button>
-                        <button onclick="filterHistory('borrowed')" class="filter-button px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
-                            <i class="fas fa-book mr-2"></i> Currently Borrowed
-                        </button>
-                        <button onclick="filterHistory('returned')" class="filter-button px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
-                            <i class="fas fa-check mr-2"></i> Returned
-                        </button>
-                        <button onclick="filterHistory('overdue')" class="filter-button px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
-                            <i class="fas fa-exclamation-triangle mr-2"></i> Overdue
-                        </button>
-                        <button onclick="filterHistory('damaged')" class="filter-button px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
-                            <i class="fas fa-exclamation-circle mr-2"></i> Damaged
-                        </button>
-                        <button onclick="filterHistory('lost')" class="filter-button px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
-                            <i class="fas fa-times-circle mr-2"></i> Lost
-                        </button>
+                <!-- Points Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="points-card p-6 text-white">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-xl font-semibold">Total Points</h2>
+                            <i class="fas fa-star text-2xl"></i>
+                        </div>
+                        <p class="text-4xl font-bold mb-2" id="totalPoints">Loading...</p>
+                        <p class="text-sm opacity-80">Available for rewards</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Points Rules</h2>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span>No points for returning books 1-2 days after borrowing</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span>+15 points for returning books 3 or more days after borrowing (on time or early)</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-amber-500 mr-2"></i>
+                                <span>-2 points for each day late (up to -20 points max)</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                                <span>-20 points for returning a book with damage</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                                <span>-40 points for lost books</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
-                <!-- History List -->
+                <!-- Available Rewards -->
+                <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Available Rewards</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="rewardsList">
+                        <!-- Rewards will be dynamically added here -->
+                        <div class="loading-placeholder">
+                            <i class="fas fa-spinner fa-spin"></i> Loading rewards...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reward Details Modal -->
+                <div id="rewardDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+                    <div class="modal-content bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4 relative">
+                        <button onclick="closeRewardDetailsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                        <div id="rewardDetailsContent">
+                            <!-- Reward details will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Points History -->
                 <div class="bg-white rounded-xl shadow-md p-6">
-                    <div class="space-y-4" id="historyList">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Points History</h2>
+                    <div class="space-y-4" id="pointsHistory">
                         <!-- History items will be dynamically added here -->
                         <div class="loading-placeholder">
                             <i class="fas fa-spinner fa-spin"></i> Loading history...
@@ -204,8 +226,6 @@
         // Constants
         const API_BASE_URL = 'http://localhost:5000/api';
         let currentUser = null;
-        let currentFilter = 'all';
-        let historyData = [];
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', async () => {
@@ -225,7 +245,11 @@
                 }
 
                 updateUserInfo();
-                await loadHistory();
+                await Promise.all([
+                    loadPointsSummary(),
+                    loadRewards(),
+                    loadPointsHistory()
+                ]);
             } catch (error) {
                 console.error('Error initializing page:', error);
                 window.location.href = 'login.html';
@@ -251,138 +275,131 @@
             }
         }
 
-        // Load borrowing history
-        async function loadHistory() {
+        // Load points summary
+        async function loadPointsSummary() {
             try {
-                const response = await fetch(`${API_BASE_URL}/student/history/${currentUser.id}`);
+                const response = await fetch(`${API_BASE_URL}/student/points/${currentUser.id}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                historyData = await response.json();
-                renderHistory();
-            } catch (error) {
-                console.error('Error loading history:', error);
-                const container = document.getElementById('historyList');
-                container.innerHTML = '<p class="text-red-500 text-center">Error loading history. Please try again later.</p>';
-            }
-        }
-
-        // Filter history data
-        function filterHistoryData(data, filter) {
-            const now = new Date();
-            switch (filter) {
-                case 'borrowed':
-                    return data.filter(item => !item.returnDate && item.status === 'borrowed');
-                case 'returned':
-                    return data.filter(item => item.returnDate && item.status === 'returned');
-                case 'overdue':
-                    return data.filter(item => {
-                        const dueDate = new Date(item.dueDate);
-                        return !item.returnDate && dueDate < now;
-                    });
-                case 'damaged':
-                    return data.filter(item => item.status === 'return w/ damage');
-                case 'lost':
-                    return data.filter(item => item.status === 'lost');
-                default:
-                    return data;
-            }
-        }
-
-        // Render history items
-        function renderHistory() {
-            const container = document.getElementById('historyList');
-            if (!Array.isArray(historyData) || historyData.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center">No borrowing history available.</p>';
-                return;
-            }
-
-            const filteredData = filterHistoryData(historyData, currentFilter);
-            if (filteredData.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 text-center">No ${currentFilter} books found.</p>`;
-                return;
-            }
-
-            container.innerHTML = filteredData.map(item => {
-                const dueDate = new Date(item.dueDate);
-                const now = new Date();
-                const isOverdue = !item.returnDate && dueDate < now;
-                let status = item.status;
-                if (isOverdue) status = 'OVERDUE';
-
-                // Determine status badge color
-                let statusClass = '';
-                switch (status.toLowerCase()) {
-                    case 'borrowed':
-                        statusClass = 'bg-blue-100 text-blue-800';
-                        break;
-                    case 'returned':
-                        statusClass = 'bg-green-100 text-green-800';
-                        break;
-                    case 'return w/ damage':
-                        statusClass = 'bg-yellow-100 text-yellow-800';
-                        break;
-                    case 'lost':
-                        statusClass = 'bg-red-100 text-red-800';
-                        break;
-                    case 'overdue':
-                        statusClass = 'bg-orange-100 text-orange-800';
-                        break;
-                    default:
-                        statusClass = 'bg-gray-100 text-gray-800';
+                const data = await response.json();
+                
+                const pointsElement = document.getElementById('totalPoints');
+                if (pointsElement) {
+                    pointsElement.textContent = data.points || '0';
                 }
+            } catch (error) {
+                console.error('Error loading points summary:', error);
+                const pointsElement = document.getElementById('totalPoints');
+                if (pointsElement) {
+                    pointsElement.textContent = 'Error';
+                }
+            }
+        }
 
-                return `
-                    <div class="history-item bg-white p-4 rounded-lg shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h3 class="font-medium text-gray-800">${item.bookTitle}</h3>
-                                    <span class="status-badge ${statusClass}">
-                                        ${status.toUpperCase()}
-                                    </span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                                    <div>
-                                        <p><i class="fas fa-calendar-alt mr-2"></i> Borrowed: ${new Date(item.borrowDate).toLocaleDateString()}</p>
-                                        <p><i class="fas fa-clock mr-2"></i> Due: ${dueDate.toLocaleDateString()}</p>
-                                    </div>
-                                    <div>
-                                        ${item.returnDate ? `
-                                            <p><i class="fas fa-check-circle mr-2"></i> Returned: ${new Date(item.returnDate).toLocaleDateString()}</p>
-                                        ` : ''}
-                                        ${isOverdue ? `
-                                            <p><i class="fas fa-exclamation-circle mr-2"></i> Days Overdue: ${Math.floor((now - dueDate) / (1000 * 60 * 60 * 24))}</p>
-                                        ` : ''}
-                                        ${item.status === 'return w/ damage' ? `
-                                            <p><i class="fas fa-exclamation-triangle mr-2"></i> Returned with Damage</p>
-                                        ` : ''}
-                                        ${item.status === 'lost' ? `
-                                            <p><i class="fas fa-times-circle mr-2"></i> Book Lost</p>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            </div>
+        // Load available rewards
+        async function loadRewards() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/student/rewards`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                const container = document.getElementById('rewardsList');
+                if (!Array.isArray(data) || data.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center">No rewards available at the moment.</p>';
+                    return;
+                }
+                
+                container.innerHTML = data.map((reward, idx) => `
+                    <div class="reward-card p-4 cursor-pointer hover:shadow-lg transition flex flex-col items-center ${!reward.available ? 'opacity-50 cursor-not-allowed' : ''}" 
+                         onclick="${reward.available ? `showRewardDetails(${idx})` : ''}" 
+                         data-reward-idx="${idx}">
+                        <div class="w-16 h-16 rounded-lg bg-blue-100 flex items-center justify-center mb-2 overflow-hidden">
+                            <i class='fas fa-gift text-2xl text-blue-400'></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-gray-800 text-center mb-1">${reward.name}</h3>
+                        <div class="text-center text-blue-700 font-semibold text-sm mb-1">${reward.points} points</div>
+                        <div class="text-sm ${reward.available ? 'text-green-600' : 'text-red-600'}">
+                            ${reward.available ? 'Available' : 'Unavailable'}
                         </div>
                     </div>
-                `;
-            }).join('');
+                `).join('');
+                // Store rewards in a global variable for modal access
+                window._rewardsData = data;
+            } catch (error) {
+                console.error('Error loading rewards:', error);
+                const container = document.getElementById('rewardsList');
+                container.innerHTML = '<p class="text-red-500 text-center">Error loading rewards. Please try again later.</p>';
+            }
         }
 
-        // Handle filter changes
-        function filterHistory(filter) {
-            currentFilter = filter;
-            
-            // Update active filter button
-            const buttons = document.querySelectorAll('.filter-button');
-            buttons.forEach(button => {
-                button.classList.remove('active');
-                if (button.textContent.toLowerCase().includes(filter)) {
-                    button.classList.add('active');
+        // Show reward details modal
+        function showRewardDetails(idx) {
+            const reward = window._rewardsData && window._rewardsData[idx];
+            if (!reward || !reward.available) return;
+            const modal = document.getElementById('rewardDetailsModal');
+            const content = document.getElementById('rewardDetailsContent');
+            content.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <div class="w-40 h-40 mb-4 flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden">
+                        ${reward.image_url ? `<img src="http://localhost:5000${reward.image_url}" alt="${reward.name}" class="object-contain w-full h-full" onerror=\"this.onerror=null;this.src='assets/pic/default-book.jpg';\">` : `<i class='fas fa-gift text-6xl text-blue-200'></i>`}
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2 text-center">${reward.name}</h2>
+                    <p class="text-gray-600 text-center mb-2">${reward.description || ''}</p>
+                    <div class="text-blue-700 font-semibold mb-2">Points Required: ${reward.points}</div>
+                    <div class="text-sm ${reward.available ? 'text-green-600' : 'text-red-600'} mb-4">
+                        ${reward.available ? 'Available' : 'Unavailable'}
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function closeRewardDetailsModal() {
+            document.getElementById('rewardDetailsModal').classList.add('hidden');
+        }
+
+        // Load points history
+        async function loadPointsHistory() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/student/points/history/${currentUser.id}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            });
-            
-            renderHistory();
+                const data = await response.json();
+                
+                // Update current points display
+                const pointsElement = document.getElementById('totalPoints');
+                if (pointsElement) {
+                    pointsElement.textContent = data.currentPoints || '0';
+                }
+                
+                const container = document.getElementById('pointsHistory');
+                if (!Array.isArray(data.history) || data.history.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center">No points history available.</p>';
+                    return;
+                }
+                
+                container.innerHTML = data.history.map(item => `
+                    <div class="points-history-item bg-white p-4 rounded-lg shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium text-gray-800">${item.description}</h3>
+                                <p class="text-sm text-gray-500">${new Date(item.date).toLocaleDateString()}</p>
+                            </div>
+                            <span class="font-semibold ${item.points > 0 ? 'text-green-600' : 'text-red-600'}">
+                                ${item.points > 0 ? '+' : ''}${item.points}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading points history:', error);
+                const container = document.getElementById('pointsHistory');
+                container.innerHTML = '<p class="text-red-500 text-center">Error loading points history. Please try again later.</p>';
+            }
         }
 
         // Handle logout

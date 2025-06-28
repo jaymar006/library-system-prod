@@ -6,7 +6,7 @@
     "start": "concurrently \"node server.js\" \"electron .\"",
     "server": "node server.js",
     "electron": "electron .",
-    "build:css": "tailwindcss -i ./src/input.css -o ./dist/output.css && tailwindcss -i ./src/input.css -o ./src/output.css",
+    "build:css": "tailwindcss -i ./src/input.css -o ./dist/output.css && tailwindcss -i ./src/input.css -o ./src/output.css && node copy-css.js",
     "watch:css": "concurrently \"tailwindcss -i ./src/input.css -o ./dist/output.css --watch\" \"tailwindcss -i ./src/input.css -o ./src/output.css --watch\"",
     "pack": "electron-builder --dir --win portable",
     "build": "npm run build:css && electron-builder --win nsis"

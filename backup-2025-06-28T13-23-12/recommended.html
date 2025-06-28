@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book List - Library Management System</title>
+    <title>Recommended Books - Library Management System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="assets/css/output.css" rel="stylesheet">
+    <link href="dist/output.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom scrollbar for sidebar */
@@ -18,22 +18,29 @@
         }
 
         /* Book card styles */
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
         .book-card {
             background: white;
             border-radius: 0.75rem;
             overflow: hidden;
-            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .book-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 12px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
         .book-image-container {
             width: 100%;
-            height: 200px;
+            height: 250px;
             overflow: hidden;
         }
 
@@ -71,62 +78,30 @@
             text-overflow: ellipsis;
         }
 
-        .book-status {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
+        .book-rating {
+            color: #f59e0b;
             font-weight: 500;
+            font-size: 0.875rem;
         }
 
-        .book-status.available {
-            background-color: #dcfce7;
-            color: #16a34a;
-        }
-
-        .book-status.borrowed {
-            background-color: #e0e7ff;
-            color: #4f46e5;
-        }
-
-        /* Search and filter styles */
-        .search-input {
-            transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .filter-button {
-            transition: all 0.3s ease;
-        }
-
-        .filter-button:hover {
-            transform: translateY(-2px);
-        }
-
-        .filter-button.active {
-            background-color: #4f46e5;
-            color: white;
-        }
-
-        /* Update grid layout for more books per row */
-        @media (min-width: 1024px) {
-            .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3.xl\:grid-cols-4 {
-                grid-template-columns: repeat(5, minmax(0, 1fr));
+        /* Media query for smaller screens */
+        @media (max-width: 1366px) {
+            .book-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 1rem;
             }
-        }
 
-        @media (min-width: 1280px) {
-            .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3.xl\:grid-cols-4 {
-                grid-template-columns: repeat(6, minmax(0, 1fr));
+            .book-image-container {
+                height: 220px;
+            }
+
+            .book-info {
+                padding: 0.75rem;
             }
         }
     </style>
 </head>
-<body class="bg-gray-50 font-sans text-base text-gray-700 relative">
+<body class="bg-gray-50 font-sans text-[15px] text-gray-700 relative">
     <div class="fixed top-0 right-0 z-50 flex gap-2 select-none p-2">
         <button onclick="window.electronAPI.minimize()" title="Minimize" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 active:bg-gray-300 text-gray-600 hover:text-blue-600 transition-colors duration-150">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M6 18L18 18"/></svg>
@@ -162,7 +137,7 @@
                     <span>Dashboard</span>
                 </button>
                 
-                <button onclick="window.location.href='recommended.html'" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
+                <button onclick="window.location.href='recommended.html'" class="menu-btn active flex items-center space-x-3 px-4 py-3 rounded-lg bg-blue-100 text-blue-700 font-semibold transform hover:translate-x-1 transition-all active:scale-95">
                     <i class="fas fa-book w-5 text-center"></i>
                     <span>Recommended Books</span>
                 </button>
@@ -177,7 +152,7 @@
                     <span>History</span>
                 </button>
                 
-                <button onclick="window.location.href='booklist.html'" class="menu-btn active flex items-center space-x-3 px-4 py-3 rounded-lg bg-blue-100 text-blue-700 font-semibold transform hover:translate-x-1 transition-all active:scale-95">
+                <button onclick="window.location.href='booklist.html'" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200 transform hover:translate-x-1 transition-all active:scale-95">
                     <i class="fas fa-list w-5 text-center"></i>
                     <span>Book List</span>
                 </button>
@@ -200,49 +175,19 @@
 
         <!-- Main content -->
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-            <div class="container mx-auto px-6 py-8">
+            <div class="container mx-auto px-4 py-6 max-w-5xl">
                 <h1 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                    <i class="fas fa-list text-blue-600 mr-2"></i> Book List
+                    <i class="fas fa-book text-blue-600 mr-2"></i> Recommended Books
                 </h1>
-
-                <!-- Search and Filters -->
-                <div class="bg-white rounded-xl shadow-md p-6 mb-8">
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <div class="flex-1">
-                            <div class="relative">
-                                <input 
-                                    type="text" 
-                                    id="searchInput"
-                                    placeholder="Search by title, author, or Shelf Location..."
-                                    class="search-input w-full px-4 py-2 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500"
-                                >
-                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <button onclick="filterBooks('all')" class="filter-button active px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
-                                <i class="fas fa-list mr-2"></i> All
-                            </button>
-                            <button onclick="filterBooks('available')" class="filter-button px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
-                                <i class="fas fa-check mr-2"></i> Available
-                            </button>
-                            <button onclick="filterBooks('borrowed')" class="filter-button px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
-                                <i class="fas fa-times mr-2"></i> Unavailable
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Book List -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="bookList">
+                <div class="book-grid" id="recommendedBooks">
                     <!-- Books will be dynamically added here -->
                     <div class="loading-placeholder">
-                        <i class="fas fa-spinner fa-spin"></i> Loading books...
+                        <i class="fas fa-spinner fa-spin"></i> Loading recommendations...
                     </div>
                 </div>
 
                 <!-- Pagination Controls -->
-                <div class="pagination-controls flex justify-between items-center my-4 text-sm text-secondary-600">
+                <div class="pagination-controls flex justify-between items-center mt-6 text-sm text-secondary-600">
                     <div class="flex items-center space-x-3">
                         <span class="text-xs font-medium bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full" id="pagination-info">
                             0-0 of 0
@@ -257,10 +202,10 @@
                     </div>
                     <div>
                         <select id="rows-per-page" class="text-sm border-secondary-200 rounded-lg focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50 bg-white shadow-sm">
+                            <option value="8">8 books</option>
                             <option value="12">12 books</option>
-                            <option value="24">24 books</option>
-                            <option value="36">36 books</option>
-                            <option value="48">48 books</option>
+                            <option value="16">16 books</option>
+                            <option value="20">20 books</option>
                         </select>
                     </div>
                 </div>
@@ -291,12 +236,9 @@
         // Constants
         const API_BASE_URL = 'http://localhost:5000/api';
         let currentUser = null;
-        let currentFilter = 'all';
-        let booksData = [];
-        let searchTimeout = null;
         let currentPage = 1;
-        let recordsPerPage = 12;
-        let filteredBooks = [];
+        let recordsPerPage = 8;
+        let recommendedBooks = [];
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', async () => {
@@ -316,34 +258,28 @@
                 }
 
                 updateUserInfo();
-                await loadBooks();
-
-                // Add search input event listener
-                const searchInput = document.getElementById('searchInput');
-                if (searchInput) {
-                    searchInput.addEventListener('input', handleSearch);
-                }
+                await loadRecommendedBooks();
 
                 // Add pagination event listeners
                 document.getElementById('prev-page').addEventListener('click', () => {
                     if (currentPage > 1) {
                         currentPage--;
-                        renderFilteredBooks(filteredBooks);
+                        renderBooks();
                     }
                 });
 
                 document.getElementById('next-page').addEventListener('click', () => {
-                    const totalPages = Math.ceil(filteredBooks.length / recordsPerPage);
+                    const totalPages = Math.ceil(recommendedBooks.length / recordsPerPage);
                     if (currentPage < totalPages) {
                         currentPage++;
-                        renderFilteredBooks(filteredBooks);
+                        renderBooks();
                     }
                 });
 
                 document.getElementById('rows-per-page').addEventListener('change', (e) => {
                     recordsPerPage = parseInt(e.target.value);
                     currentPage = 1;
-                    renderFilteredBooks(filteredBooks);
+                    renderBooks();
                 });
             } catch (error) {
                 console.error('Error initializing page:', error);
@@ -370,29 +306,6 @@
             }
         }
 
-        // Load books
-        async function loadBooks() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/books`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                booksData = await response.json();
-                filteredBooks = [...booksData]; // Initialize filteredBooks with all books
-                renderFilteredBooks(filteredBooks);
-            } catch (error) {
-                console.error('Error loading books:', error);
-                const container = document.getElementById('bookList');
-                container.innerHTML = '<p class="text-red-500 text-center">Error loading books. Please try again later.</p>';
-            }
-        }
-
-        // Render books
-        function renderBooks() {
-            filteredBooks = filterBooksData(booksData, currentFilter);
-            renderFilteredBooks(filteredBooks);
-        }
-
         // Update pagination controls
         function updatePaginationControls(totalRecords, startIndex = 0, endIndex = 0, totalPages = 1) {
             const prevButton = document.getElementById('prev-page');
@@ -414,61 +327,38 @@
             nextButton.classList.toggle('cursor-not-allowed', currentPage >= totalPages);
         }
 
-        // Filter books data
-        function filterBooksData(data, filter) {
-            switch (filter) {
-                case 'available':
-                    return data.filter(book => book.available);
-                case 'borrowed':
-                    return data.filter(book => !book.available);
-                default:
-                    return data;
+        // Load recommended books
+        async function loadRecommendedBooks() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/student/recommended/${currentUser.id}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                recommendedBooks = await response.json();
+                renderBooks();
+            } catch (error) {
+                console.error('Error loading recommended books:', error);
+                const container = document.getElementById('recommendedBooks');
+                container.innerHTML = '<p class="text-red-500 text-center">Error loading recommended books. Please try again later.</p>';
             }
         }
 
-        // Handle search
-        function handleSearch(event) {
-            const searchTerm = event.target.value.toLowerCase();
-            currentPage = 1; // Reset to first page when searching
+        // Render books with pagination
+        function renderBooks() {
+            const container = document.getElementById('recommendedBooks');
             
-            // Clear previous timeout
-            if (searchTimeout) {
-                clearTimeout(searchTimeout);
-            }
-            
-            // Set new timeout
-            searchTimeout = setTimeout(() => {
-                // Filter books based on search term
-                filteredBooks = booksData.filter(book => 
-                    book.name.toLowerCase().includes(searchTerm) ||
-                    book.author.toLowerCase().includes(searchTerm) ||
-                    (book.shelf_location?.toLowerCase() || '').includes(searchTerm)
-                );
-
-                // Apply current filter to search results
-                filteredBooks = filterBooksData(filteredBooks, currentFilter);
-                
-                // Render the filtered and paginated results
-                renderFilteredBooks(filteredBooks);
-            }, 300);
-        }
-
-        // New function to render filtered books with pagination
-        function renderFilteredBooks(filteredData) {
-            const container = document.getElementById('bookList');
-            
-            if (filteredData.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center">No books found matching your search.</p>';
+            if (!Array.isArray(recommendedBooks) || recommendedBooks.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No recommended books available at the moment.</p>';
                 updatePaginationControls(0);
                 return;
             }
 
             // Calculate pagination values
-            const totalRecords = filteredData.length;
+            const totalRecords = recommendedBooks.length;
             const totalPages = Math.ceil(totalRecords / recordsPerPage);
             const startIndex = (currentPage - 1) * recordsPerPage;
             const endIndex = Math.min(startIndex + recordsPerPage, totalRecords);
-            const currentRecords = filteredData.slice(startIndex, endIndex);
+            const currentRecords = recommendedBooks.slice(startIndex, endIndex);
 
             // Update pagination controls
             updatePaginationControls(totalRecords, startIndex, endIndex, totalPages);
@@ -478,21 +368,16 @@
                 <div class="book-card">
                     <div class="book-image-container">
                         <img 
-                            src="${book.image_url || 'assets/pic/default-book.jpg'}" 
-                            alt="${book.name}"
+                            src="${book.image_url}" 
+                            alt="${book.title}"
                             onerror="this.onerror=null; this.src='assets/pic/default-book.jpg';"
                         >
                     </div>
                     <div class="book-info">
-                        <div class="book-title">${book.name}</div>
+                        <div class="book-title">${book.title}</div>
                         <div class="book-author">${book.author}</div>
-                        <div class="text-sm text-gray-600 mb-2">
-                            <i class="fas fa-map-marker-alt mr-2"></i>${book.shelf_location || 'Location not specified'}
-                        </div>
-                        <div class="flex items-center justify-between mt-4">
-                            <span class="book-status ${book.available ? 'available' : 'borrowed'}">
-                                ${book.available ? 'Available' : 'Not Available'}
-                            </span>
+                        <div class="book-rating">
+                            <i class="fas fa-star"></i> Rating: ${book.rating || 'N/A'}/5
                         </div>
                     </div>
                 </div>
@@ -506,70 +391,6 @@
                     this.style.opacity = '1';
                 };
             });
-        }
-
-        // Handle filter changes
-        function filterBooks(filter) {
-            currentFilter = filter;
-            currentPage = 1; // Reset to first page when filtering
-            
-            // Update active filter button
-            const buttons = document.querySelectorAll('.filter-button');
-            buttons.forEach(button => {
-                button.classList.remove('active');
-                const buttonText = button.textContent.trim().toLowerCase();
-                if (
-                    (filter === 'all' && buttonText === 'all') ||
-                    (filter === 'available' && buttonText === 'available') ||
-                    (filter === 'borrowed' && buttonText === 'unavailable')
-                ) {
-                    button.classList.add('active');
-                }
-            });
-            
-            // Get current search term
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            // Apply both search and filter
-            filteredBooks = booksData.filter(book => 
-                (book.name.toLowerCase().includes(searchTerm) ||
-                book.author.toLowerCase().includes(searchTerm) ||
-                (book.shelf_location?.toLowerCase() || '').includes(searchTerm)) &&
-                (filter === 'all' || 
-                (filter === 'available' && book.available) ||
-                (filter === 'borrowed' && !book.available))
-            );
-            
-            renderFilteredBooks(filteredBooks);
-        }
-
-        // Borrow book
-        async function borrowBook(bookId) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/books/borrow`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        studentId: currentUser.id,
-                        bookId: bookId
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                showModal(data.message || 'Book borrowed successfully!', 'success');
-                
-                // Refresh book list
-                await loadBooks();
-            } catch (error) {
-                console.error('Error borrowing book:', error);
-                showModal('Error borrowing book. Please try again later.', 'error');
-            }
         }
 
         // Handle logout

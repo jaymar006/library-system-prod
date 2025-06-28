@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Borrow Book - Library Management System</title>
+    <title>Return Book - Library Management System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="assets/css/output.css" rel="stylesheet">
+    <link href="dist/output.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="assets/libs/html5-qrcode.min.js"></script>
     <script>
@@ -113,18 +113,18 @@
     <div class="bg-white shadow-sm border-b">
         <div class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-300">
+                <div class="flex items-center space-x-3">
                     <button onclick="window.location.href='admindashboard.html'" class="flex items-center justify-center w-10 h-10 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all mr-4">
                         <i class="fas fa-arrow-left"></i>
                     </button>
                     <img src="assets/pic/removebgroyal.png" alt="Logo" class="h-10 w-10 rounded-full">
-                    <h1 class="text-xl font-semibold text-gray-800">Library Management System - Borrow Book</h1>
+                    <h1 class="text-xl font-semibold text-gray-800">Library Management System - Return Book</h1>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="container mx-auto px-4 py-8 max-w-3xl">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
         <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 mb-6">
             <h2 id="scan-title" class="text-2xl font-bold text-center text-gray-800 mb-6 flex items-center justify-center">
                 <i class="fas fa-qrcode mr-3 text-primary-600"></i>
@@ -176,41 +176,70 @@
                 </div>
             </div>
             
-            <div class="grid md:grid-cols-2 gap-6 mt-8">
-                <div id="student-info" class="bg-gray-50 rounded-lg p-4 border border-gray-200 hidden">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                        <i class="fas fa-user-graduate text-primary-600 mr-2"></i>
-                        Student Information
-                    </h3>
-                    <div class="space-y-2 text-sm">
-                        <p class="flex items-center"><span class="font-medium w-24">ID:</span><span id="student-id" class="text-gray-700"></span></p>
-                        <p class="flex items-center"><span class="font-medium w-24">Name:</span><span id="student-name" class="text-gray-700"></span></p>
-                        <p class="flex items-center"><span class="font-medium w-24">Username:</span><span id="student-username" class="text-gray-700"></span></p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Left Column -->
+                <div class="space-y-6">
+                    <!-- Student Info Section -->
+                    <div id="student-info" class="bg-gray-50 rounded-lg p-4 border border-gray-200 hidden">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                            <i class="fas fa-user-graduate text-primary-600 mr-2"></i>
+                            Student Information
+                        </h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="flex items-center"><span class="font-medium w-24">ID:</span><span id="student-id" class="text-gray-700"></span></p>
+                            <p class="flex items-center"><span class="font-medium w-24">Name:</span><span id="student-name" class="text-gray-700"></span></p>
+                            <p class="flex items-center"><span class="font-medium w-24">Username:</span><span id="student-username" class="text-gray-700"></span></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Book Info Section -->
+                    <div id="book-info" class="bg-gray-50 rounded-lg p-4 border border-gray-200 hidden">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                            <i class="fas fa-book text-primary-600 mr-2"></i>
+                            Book Information
+                        </h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="flex items-center"><span class="font-medium w-24">ID:</span><span id="book-id" class="text-gray-700"></span></p>
+                            <p class="flex items-center"><span class="font-medium w-24">Title:</span><span id="book-title" class="text-gray-700"></span></p>
+                            <p class="flex items-center"><span class="font-medium w-24">Author:</span><span id="book-author" class="text-gray-700"></span></p>
+                        </div>
                     </div>
                 </div>
                 
-                <div id="book-info" class="bg-gray-50 rounded-lg p-4 border border-gray-200 hidden">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                        <i class="fas fa-book text-primary-600 mr-2"></i>
-                        Book Information
-                    </h3>
-                    <div class="space-y-2 text-sm">
-                        <p class="flex items-center"><span class="font-medium w-24">ID:</span><span id="book-id" class="text-gray-700"></span></p>
-                        <p class="flex items-center"><span class="font-medium w-24">Title:</span><span id="book-title" class="text-gray-700"></span></p>
-                        <p class="flex items-center"><span class="font-medium w-24">Author:</span><span id="book-author" class="text-gray-700"></span></p>
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <!-- Borrowing Information -->
+                    <div id="borrowing-info" class="bg-blue-50 rounded-lg p-4 border border-blue-100 hidden">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                            <i class="fas fa-calendar-check text-blue-600 mr-2"></i>
+                            Borrowing Information
+                        </h3>
+                        <div class="space-y-2 text-sm">
+                            <p class="flex items-center"><span class="font-medium w-24">Borrow Date:</span><span id="borrow-date" class="text-gray-700"></span></p>
+                            <p class="flex items-center"><span class="font-medium w-24">Due Date:</span><span id="due-date" class="text-gray-700"></span></p>
+                        </div>
                     </div>
+                    
+                    <!-- Status Message -->
+                    <div id="status" class="px-4 py-3 rounded-lg text-center hidden"></div>
                 </div>
             </div>
             
-            <div id="status" class="mt-6 px-4 py-3 rounded-lg text-center hidden"></div>
-            
-            <div class="mt-6 flex justify-center">
-                <button id="confirm-btn" class="hidden px-5 py-3 bg-green-600 text-white font-medium rounded-lg shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition flex items-center" onclick="confirmBorrowing()">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    Confirm Borrowing
+            <!-- Confirm Button -->
+            <div class="mt-8 flex justify-center">
+                <button id="confirm-btn" class="hidden px-5 py-3 bg-green-600 text-white font-medium rounded-lg shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition flex items-center" onclick="confirmReturn()">
+                    <i class="fas fa-undo-alt mr-2"></i>
+                    Confirm Return
+                </button>
+                <button id="damage-btn" class="hidden ml-4 px-5 py-3 bg-yellow-500 text-white font-medium rounded-lg shadow hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 transition flex items-center" onclick="confirmReturnWithDamage()">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Return w/ Damage
+                </button>
+                <button id="lost-btn" class="hidden ml-4 px-5 py-3 bg-red-600 text-white font-medium rounded-lg shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition flex items-center" onclick="promptMarkLost()">
+                    <i class="fas fa-times-circle mr-2"></i>
+                    Mark as Lost
                 </button>
             </div>
-            
             <!-- Reset Button -->
             <div class="mt-4 flex justify-center">
                 <button onclick="resetScanner()" class="text-gray-500 hover:text-gray-700 underline text-sm transition-colors">
@@ -220,10 +249,27 @@
         </div>
     </div>
 
+    <!-- Add Lost Book Modal -->
+    <div id="lost-book-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Mark Book as Lost</h3>
+            <p class="text-gray-600 mb-4">Are you sure you want to mark this book as lost? This action cannot be undone.</p>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeLostBookModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmMarkLost()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let html5QrcodeScanner = null;
         let studentData = null;
         let bookData = null;
+        let borrowingData = null;
         let scanningStudent = true;
 
         // Add these new functions for dropdown functionality
@@ -287,7 +333,7 @@
                         }
                         bookData = data.book;
                         displayBookInfo(data.book);
-                        completeScan();
+                        checkBorrowingStatus();
                     })
                     .catch(error => {
                         showStatus("Error fetching book details: " + error.message, "error");
@@ -312,47 +358,153 @@
             document.getElementById('book-author').textContent = data.author;
         }
 
+        function displayBorrowingInfo(data) {
+            document.getElementById('borrowing-info').classList.remove('hidden');
+            document.getElementById('borrow-date').textContent = formatDate(data.borrow_date);
+            document.getElementById('due-date').textContent = formatDate(data.due_date);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return 'Invalid Date';
+                return date.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            } catch (error) {
+                console.error('Date formatting error:', error);
+                return 'Invalid Date';
+            }
+        }
+
         function switchToBookScanning() {
             scanningStudent = false;
             document.getElementById('scan-title').innerHTML = '<i class="fas fa-qrcode mr-3 text-primary-600"></i> Scan Book QR Code';
             showStatus("Now scan the book's QR code", "waiting");
         }
 
-        function completeScan() {
-            html5QrcodeScanner.clear();
-            document.getElementById('confirm-btn').classList.remove('hidden');
-            showStatus("Ready to confirm borrowing", "success");
+        async function checkBorrowingStatus() {
+            try {
+                const response = await fetch(`http://localhost:5000/api/borrowings/check?studentId=${studentData.id}&bookId=${bookData.id}`);
+                const data = await response.json();
+
+                if (data.success && data.borrowing) {
+                    borrowingData = data.borrowing;
+                    displayBorrowingInfo(data.borrowing);
+                    document.getElementById('confirm-btn').classList.remove('hidden');
+                    document.getElementById('damage-btn').classList.remove('hidden');
+                    document.getElementById('lost-btn').classList.remove('hidden');
+                    showStatus("Ready to confirm return", "success");
+                } else {
+                    showStatus("This book is not borrowed by this student", "error");
+                }
+            } catch (error) {
+                showStatus("Error checking borrowing status", "error");
+            }
         }
 
-        async function confirmBorrowing() {
+        async function confirmReturn() {
             try {
-                const studentId = studentData.id;
-                const bookId = bookData.id;
-                
-                // Record the borrowing
-                const response = await fetch('http://localhost:5000/api/borrow-book', {
+                const response = await fetch('http://localhost:5000/api/return', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ 
-                        studentId: studentId,
-                        bookId: bookId
+                    body: JSON.stringify({
+                        studentId: studentData.id,
+                        bookId: bookData.id,
+                        borrowingId: borrowingData.id,
+                        status: 'returned'
                     })
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    showStatus("Successfully recorded borrowing!", "success");
+                    showStatus("Successfully returned the book!", "success");
                     setTimeout(() => {
                         resetScanner();
                     }, 2000);
                 } else {
-                    showStatus(result.message || "Error: " + result.error, "error");
+                    showStatus("Error: " + result.error, "error");
                 }
             } catch (error) {
-                showStatus("Error recording borrowing: " + error.message, "error");
+                showStatus("Error processing return", "error");
+            }
+        }
+
+        async function confirmReturnWithDamage() {
+            try {
+                const response = await fetch('http://localhost:5000/api/return', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        studentId: studentData.id,
+                        bookId: bookData.id,
+                        borrowingId: borrowingData.id,
+                        status: 'return w/ damage'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus("Successfully marked book as returned with damage!", "success");
+                    setTimeout(() => {
+                        resetScanner();
+                    }, 2000);
+                } else {
+                    showStatus("Error: " + result.error, "error");
+                }
+            } catch (error) {
+                showStatus("Error processing return", "error");
+            }
+        }
+
+        async function promptMarkLost() {
+            document.getElementById('lost-book-modal').classList.remove('hidden');
+        }
+
+        function closeLostBookModal() {
+            document.getElementById('lost-book-modal').classList.add('hidden');
+        }
+
+        async function confirmMarkLost() {
+            try {
+                const response = await fetch('http://localhost:5000/api/return', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        studentId: studentData.id,
+                        bookId: bookData.id,
+                        borrowingId: borrowingData.id,
+                        status: 'lost'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus("Successfully marked book as lost!", "success");
+                    closeLostBookModal();
+                    setTimeout(() => {
+                        resetScanner();
+                    }, 2000);
+                } else {
+                    showStatus("Error: " + result.error, "error");
+                }
+            } catch (error) {
+                showStatus("Error processing return", "error");
             }
         }
 
@@ -373,10 +525,16 @@
         function resetScanner() {
             studentData = null;
             bookData = null;
+            borrowingData = null;
             scanningStudent = true;
             document.getElementById('student-info').classList.add('hidden');
             document.getElementById('book-info').classList.add('hidden');
+            document.getElementById('borrowing-info').classList.add('hidden');
             document.getElementById('confirm-btn').classList.add('hidden');
+            document.getElementById('damage-btn').classList.add('hidden');
+            document.getElementById('lost-btn').classList.add('hidden');
+            document.getElementById('student-manual-form').classList.add('hidden');
+            document.getElementById('book-manual-form').classList.add('hidden');
             document.getElementById('scan-title').innerHTML = '<i class="fas fa-qrcode mr-3 text-primary-600"></i> Scan Student QR Code';
             document.getElementById('status').classList.add('hidden');
             document.getElementById('student-search').value = '';
@@ -417,9 +575,9 @@
                 const response = await fetch(`http://localhost:5000/api/students/search?query=${encodeURIComponent(searchInput)}`);
                 const data = await response.json();
 
-                if (data.success && data.students && data.students.length > 0) {
-                    studentData = data.students[0];
-                    displayStudentInfo(data.students[0]);
+                if (data.success && data.student) {
+                    studentData = data.student;
+                    displayStudentInfo(data.student);
                     switchToBookScanning();
                     showStatus("Student found successfully", "success");
                 } else {
@@ -438,13 +596,13 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:5000/api/available-books?query=${encodeURIComponent(searchInput)}`);
+                const response = await fetch(`http://localhost:5000/api/borrowed-books/${studentData.id}?query=${encodeURIComponent(searchInput)}`);
                 const data = await response.json();
 
                 if (data.success && data.books && data.books.length > 0) {
                     bookData = data.books[0];
-                    displayBookInfo(data.books[0]);
-                    completeScan();
+                    displayBookInfo(bookData);
+                    checkBorrowingStatus();
                     showStatus("Book found successfully", "success");
                 } else {
                     showStatus("Book not found", "error");
@@ -454,7 +612,7 @@
             }
         }
 
-        // Add event listeners for search inputs
+        // Add these new functions for dropdown functionality
         document.getElementById('student-search').addEventListener('input', function(e) {
             clearTimeout(studentSearchTimeout);
             const query = e.target.value.trim();
@@ -500,16 +658,65 @@
             }, 300);
         });
 
+        // Helper to fetch and show all borrowed books for the selected student
+        function showAllBorrowedBooksDropdown() {
+            const suggestionsDiv = document.getElementById('book-suggestions');
+            if (!studentData) {
+                suggestionsDiv.classList.add('hidden');
+                return;
+            }
+            fetch(`http://localhost:5000/api/borrowed-books/${studentData.id}`)
+                .then(response => response.json())
+                .then(data => {
+                    suggestionsDiv.innerHTML = '';
+                    if (data.success && data.books && data.books.length > 0) {
+                        data.books.forEach(book => {
+                            const div = document.createElement('div');
+                            div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                            div.innerHTML = `
+                                <div class=\"font-medium\">${book.name}</div>
+                                <div class=\"text-sm text-gray-600\">ID: ${book.id} | Author: ${book.author}</div>
+                            `;
+                            div.onclick = () => {
+                                document.getElementById('book-search').value = book.name;
+                                suggestionsDiv.classList.add('hidden');
+                                bookData = book;
+                                displayBookInfo(book);
+                                checkBorrowingStatus();
+                                showStatus("Book found successfully", "success");
+                            };
+                            suggestionsDiv.appendChild(div);
+                        });
+                        suggestionsDiv.classList.remove('hidden');
+                    } else {
+                        suggestionsDiv.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    suggestionsDiv.classList.add('hidden');
+                });
+        }
+
+        document.getElementById('book-search').addEventListener('focus', function(e) {
+            if (studentData && !e.target.value.trim()) {
+                showAllBorrowedBooksDropdown();
+            }
+        });
+
         document.getElementById('book-search').addEventListener('input', function(e) {
             clearTimeout(bookSearchTimeout);
             const query = e.target.value.trim();
             const suggestionsDiv = document.getElementById('book-suggestions');
-            if (!studentData || query.length < 1) {
+            if (!studentData) {
                 suggestionsDiv.classList.add('hidden');
                 return;
             }
+            if (query.length < 1) {
+                showAllBorrowedBooksDropdown();
+                return;
+            }
             bookSearchTimeout = setTimeout(() => {
-                fetch(`http://localhost:5000/api/available-books?query=${encodeURIComponent(query)}`)
+                fetch(`http://localhost:5000/api/borrowed-books/${studentData.id}?query=${encodeURIComponent(query)}`)
                     .then(response => response.json())
                     .then(data => {
                         suggestionsDiv.innerHTML = '';
@@ -518,15 +725,15 @@
                                 const div = document.createElement('div');
                                 div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
                                 div.innerHTML = `
-                                    <div class="font-medium">${book.name}</div>
-                                    <div class="text-sm text-gray-600">ID: ${book.id} | Author: ${book.author}</div>
+                                    <div class=\"font-medium\">${book.title}</div>
+                                    <div class=\"text-sm text-gray-600\">ID: ${book.id} | Author: ${book.author}</div>
                                 `;
                                 div.onclick = () => {
-                                    document.getElementById('book-search').value = book.name;
+                                    document.getElementById('book-search').value = book.title;
                                     suggestionsDiv.classList.add('hidden');
                                     bookData = book;
                                     displayBookInfo(book);
-                                    completeScan();
+                                    checkBorrowingStatus();
                                     showStatus("Book found successfully", "success");
                                 };
                                 suggestionsDiv.appendChild(div);
@@ -537,7 +744,6 @@
                         }
                     })
                     .catch(error => {
-                        console.error('Error fetching book suggestions:', error);
                         suggestionsDiv.classList.add('hidden');
                     });
             }, 300);
@@ -555,14 +761,6 @@
 
         // Initialize scanner when page loads
         window.onload = initializeScanner;
-
-        // Logout function
-        function logout() {
-            // Clear any stored user data
-            localStorage.removeItem('userData');
-            // Redirect to login page
-            window.location.href = 'login.html';
-        }
     </script>
 </body>
 </html> 

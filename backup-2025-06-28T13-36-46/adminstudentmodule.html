@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Management - Library Management System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="assets/css/output.css" rel="stylesheet">
+    <link href="dist/win-unpacked/dist/output.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -1027,7 +1027,6 @@
         const studentModal = document.getElementById('deleteStudentModal');
         const messageModal = document.getElementById('messageModal');
         const addStudentModal = document.getElementById('addStudentModal');
-        const importConfirmModal = document.getElementById('importConfirmModal');
         
         if (event.target === studentModal) {
             studentModal.style.display = 'none';
@@ -1037,13 +1036,6 @@
         }
         if (event.target === addStudentModal) {
             closeModal();
-        }
-        // Don't allow closing import confirmation modal by clicking outside during import
-        if (event.target === importConfirmModal) {
-            const confirmBtn = document.getElementById('confirmImportBtn');
-            if (!confirmBtn.disabled) {
-                closeImportConfirmModal();
-            }
         }
     }
 
@@ -1270,7 +1262,7 @@
                             message += '\n' + errorMessages.join('\n');
                         }
                         showModal(message, errorCount > 0 ? 'warning' : 'success');
-                        await fetchStudents(); // Refresh the table
+                        fetchStudents(); // Refresh the table
                     } else {
                         showModal('Failed to import any students:\n' + errorMessages.join('\n'), 'error');
                     }
@@ -1355,46 +1347,18 @@
     function showImportConfirmModal(message, onConfirm) {
         document.getElementById('importConfirmMessage').innerText = message;
         document.getElementById('importConfirmModal').style.display = 'flex';
-        
-        // Get the confirm button and remove any existing event listeners
+        // Remove previous event listeners
         const confirmBtn = document.getElementById('confirmImportBtn');
-        
-        // Remove existing click event listeners by cloning the button
         const newBtn = confirmBtn.cloneNode(true);
         confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
-        
-        // Add new event listener
-        newBtn.addEventListener('click', async function() {
-            // Disable button and show loading state
-            newBtn.disabled = true;
-            newBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Importing...';
-            
-            try {
-                await onConfirm();
-            } catch (error) {
-                console.error('Error in import confirmation:', error);
-                showModal('Error during import: ' + error.message, 'error');
-            } finally {
-                closeImportConfirmModal();
-            }
-        });
+        newBtn.onclick = async function() {
+            await onConfirm();
+            closeImportConfirmModal();
+        };
     }
 
     function closeImportConfirmModal() {
-        const modal = document.getElementById('importConfirmModal');
-        const confirmBtn = document.getElementById('confirmImportBtn');
-        
-        // Hide the modal
-        modal.style.display = 'none';
-        
-        // Clear the message
-        document.getElementById('importConfirmMessage').innerText = '';
-        
-        // Reset the confirm button to prevent any lingering state
-        if (confirmBtn) {
-            confirmBtn.disabled = false;
-            confirmBtn.innerHTML = 'Import';
-        }
+        document.getElementById('importConfirmModal').style.display = 'none';
     }
 
     // Add this function after the renderStudentsTable function
