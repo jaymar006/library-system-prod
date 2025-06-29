@@ -3053,4 +3053,61 @@ app.post('/api/reset-student-counter', (req, res) => {
     });
 });
 
+// Add endpoint for admin password change
+app.post('/api/admin/change-password', (req, res) => {
+    const { adminId, currentPassword, newPassword } = req.body;
+
+    if (!adminId || !currentPassword || !newPassword) {
+        return res.status(400).json({ success: false, error: 'Admin ID, current password, and new password are required' });
+    }
+
+    // First verify the current password
+    db.get('SELECT id, username, email FROM admins WHERE id = ? AND password = ?', [adminId, currentPassword], (err, admin) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ success: false, error: 'Database error' });
+        }
+
+        if (!admin) {
+            return res.status(400).json({ success: false, error: 'Current password is incorrect' });
+        }
+
+        // Update the password
+        db.run('UPDATE admins SET password = ? WHERE id = ?', [newPassword, adminId], function(err) {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ success: false, error: 'Failed to update password' });
+            }
+
+            // Send email notification about password change
+            const mailOptions = {
+                from: 'emanuelrato774@gmail.com',
+                to: admin.email,
+                subject: 'Password Changed - Admin Account',
+                html: `
+                    <h2>Password Changed Successfully</h2>
+                    <p>Dear ${admin.username},</p>
+                    <p>Your admin account password has been successfully changed.</p>
+                    <p>If you did not make this change, please contact the system administrator immediately.</p>
+                    <p>Best regards,<br>Library Management System</p>
+                `
+            };
+
+            transporter.sendMail(mailOptions, function(error, info) {
+                if (error) {
+                    console.error('Email error:', error);
+                    // Don't fail the request if email fails
+                } else {
+                    console.log('Password change notification sent:', info.response);
+                }
+            });
+
+            res.json({ 
+                success: true, 
+                message: 'Password changed successfully. A notification has been sent to your email.' 
+            });
+        });
+    });
+});
+
 
